@@ -5,6 +5,10 @@
 
 package net.homelinux.inhere.wirelessinfo;
 
+/*
+ * Pieter Linde
+ */
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
