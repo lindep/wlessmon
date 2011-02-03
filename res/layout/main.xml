@@ -1,53 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
- android:orientation="vertical"
- android:layout_width="fill_parent"
- android:layout_height="fill_parent">
-
- <TextView android:text="Network Type: " android:id="@+id/networktype"
-  android:layout_width="wrap_content"
-  android:layout_height="wrap_content"/>
-
- <TextView android:text="CellID: " android:id="@+id/TextView01"
-  android:layout_width="wrap_content"
-  android:layout_height="wrap_content"/>
-
- <TextView android:text="Lac: " android:id="@+id/TextView02"
-  android:layout_width="wrap_content"
-  android:layout_height="wrap_content"/>
-
- <TextView android:text="Mcc: " android:id="@+id/TextView03"
-  android:layout_width="wrap_content"
-  android:layout_height="wrap_content"/>
-
- <TextView android:text="Mnc: " android:id="@+id/TextView04"
-  android:layout_width="wrap_content"
-  android:layout_height="wrap_content"/>
-
- <Button android:text="Update cell" android:id="@+id/UpdateCellButton"
-  android:layout_width="fill_parent" android:layout_height="wrap_content"/>
-
- <TextView android:text="Latitude: " android:id="@+id/position_latitude"
-  android:layout_width="wrap_content"
-  android:layout_height="wrap_content"/>
-
- <TextView android:text="Longitude: " android:id="@+id/position_longitude"
-  android:layout_width="wrap_content"
-  android:layout_height="wrap_content"/>
-
- <TextView android:text="Name: " android:id="@+id/position_name"
-  android:layout_width="wrap_content"
-  android:layout_height="wrap_content"/>
-
- <TextView android:text="Accuracy: " android:id="@+id/position_accuracy"
-  android:layout_width="wrap_content"
-  android:layout_height="wrap_content"/>
-
- <Button android:text="Get position" android:id="@+id/GetPositionButton"
-  android:layout_width="fill_parent"
-  android:layout_height="wrap_content"/>
-
-  <TextView android:text="Other: " android:id="@+id/other_txt"
-  android:layout_width="wrap_content"
-  android:layout_height="wrap_content"/>
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    >
+<TextView  
+    android:layout_width="fill_parent" 
+    android:layout_height="wrap_content" 
+    android:text="@string/hello"
+    />
 </LinearLayout>
