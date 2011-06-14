@@ -343,3 +343,4 @@ public class WirelessInfo extends Activity {
   }
  }
 }
+
