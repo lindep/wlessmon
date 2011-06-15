@@ -25,6 +25,8 @@ import org.json.JSONObject;
 
 import android.app.Activity;
 import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
@@ -125,7 +127,19 @@ public class WirelessInfo extends Activity {
    public void onClick(View v) {
 
     String strResult;
-
+    
+    /**
+     * Make sure data services up
+     */
+    ConnectivityManager cm = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
+    NetworkInfo niw = cm.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+    boolean isWifiAvail = niw.isAvailable();
+    boolean isWifiConn = niw.isConnected();
+    NetworkInfo ni = cm.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
+    boolean isMobileAvail = ni.isAvailable();
+    boolean isMobileConn = ni.isConnected();
+    strResult = "No Network available!!";
+    if (isWifiAvail && isWifiConn && isMobileAvail && isMobileConn) {
     /**
      * Seems that cid and lac shall be in hex. Cid should be padded with zero's
      * to 8 numbers if UMTS (3G) cell, otherwise to 4 numbers. Mcc padded to 3
@@ -138,6 +152,7 @@ public class WirelessInfo extends Activity {
      strResult = "Position updated!";
     } catch (IOException e) {
      strResult = "Error!\n" + e.getMessage();
+    }
     }
 
     // Show an info Toast with the results of the updateLocation
