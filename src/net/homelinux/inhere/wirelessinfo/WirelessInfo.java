@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.util.List;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -28,6 +29,7 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.telephony.NeighboringCellInfo;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.telephony.SignalStrength;
@@ -82,7 +84,28 @@ public class WirelessInfo extends Activity {
      } catch (NumberFormatException e) {
      }
     }
-
+    
+    /*TelephonyManager test = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);*/ 
+    TextView Neighboring = (TextView)findViewById(R.id.neighboring);
+    List<NeighboringCellInfo> NeighboringList = tm.getNeighboringCellInfo();
+    
+    String stringNeighboring = "Neighboring List- Lac : Cid : RSSI\n";
+    for(int i=0; i < NeighboringList.size(); i++){
+    	String dBm;
+    	int rssi = NeighboringList.get(i).getRssi();
+    	if(rssi == NeighboringCellInfo.UNKNOWN_RSSI){
+    		dBm = "Unknown RSSI";
+    		}else{
+    			dBm = String.valueOf(-113 + 2 * rssi) + " dBm";
+    			}
+    	stringNeighboring = stringNeighboring
+    	+ String.valueOf(NeighboringList.get(i).getLac()) +" : "
+    	+ String.valueOf(NeighboringList.get(i).getCid()) +" : "
+    	+ dBm +"\n";
+    	}
+    
+    Neighboring.setText(stringNeighboring);
+       
     /*
      * Check if the current cell is a UMTS (3G) cell. If a 3G cell the cell id
      * padding will be 8 numbers, if not 4 numbers.
@@ -108,11 +131,11 @@ public class WirelessInfo extends Activity {
       + networkType + ": " + tm.getNetworkType());
     ((TextView) findViewById(R.id.TextView01)).setText("CellID: "
       + getCellId(cid, networkType)  + ": " + cid);
-    ((TextView) findViewById(R.id.TextView02)).setText("Lac: "
+    ((TextView) findViewById(R.id.TextView02)).setText("LAC: "
       + getPaddedHex(lac, 4) + ": " + getPaddedInt(lac, 4));
-    ((TextView) findViewById(R.id.TextView03)).setText("Mcc: "
+    ((TextView) findViewById(R.id.TextView03)).setText("MCC: "
       + getPaddedInt(mcc, 3));
-    ((TextView) findViewById(R.id.TextView04)).setText("Mnc: "
+    ((TextView) findViewById(R.id.TextView04)).setText("MNC: "
       + getPaddedInt(mnc, 2));
    }
   });
@@ -135,24 +158,26 @@ public class WirelessInfo extends Activity {
     NetworkInfo niw = cm.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
     boolean isWifiAvail = niw.isAvailable();
     boolean isWifiConn = niw.isConnected();
+    
     NetworkInfo ni = cm.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
     boolean isMobileAvail = ni.isAvailable();
     boolean isMobileConn = ni.isConnected();
-    strResult = "No Network available!!";
-    if (isWifiAvail && isWifiConn && isMobileAvail && isMobileConn) {
+    strResult = "No network available!!";
+    
+    if ((isWifiAvail && isWifiConn) || (isMobileAvail && isMobileConn)) {
     /**
      * Seems that cid and lac shall be in hex. Cid should be padded with zero's
      * to 8 numbers if UMTS (3G) cell, otherwise to 4 numbers. Mcc padded to 3
      * numbers. Mnc padded to 2 numbers.
      */
-    try {
-     // Update the current location
-     updateLocation(getPaddedHex(cid, cellPadding), getPaddedHex(lac, 4),
-       getPaddedInt(mnc, 2), getPaddedInt(mcc, 3));
-     strResult = "Position updated!";
-    } catch (IOException e) {
-     strResult = "Error!\n" + e.getMessage();
-    }
+    	try {
+    		// Update the current location
+    		updateLocation(getPaddedHex(cid, cellPadding), getPaddedHex(lac, 4),
+    				getPaddedInt(mnc, 2), getPaddedInt(mcc, 3));
+    		strResult = "Position updated!";
+    	} catch (IOException e) {
+    		strResult = "Error!\n" + e.getMessage();
+    	}
     }
 
     // Show an info Toast with the results of the updateLocation
@@ -196,6 +221,7 @@ public class WirelessInfo extends Activity {
          ss = signalStrength.getGsmSignalStrength();
          
          ssdbm = getRSSI(ss);
+         ((TextView) findViewById(R.id.other_txt1)).setText("RSSI: -"+ ssdbm +"dBm");
          Toast.makeText(getApplicationContext(), "CINR = "+ String.valueOf(signalStrength.getGsmSignalStrength()) +", -"+ ssdbm +"dBm, "+ cdmadbm +", "+ cdmaecio, Toast.LENGTH_SHORT).show();
       }
     };/* End of private Class */
