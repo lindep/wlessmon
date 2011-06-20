@@ -49,7 +49,7 @@ public class WirelessInfo extends Activity {
  MyPhoneStateListener MyListener;
  private GsmCellLocation location;
  private int cid, lac, mcc, mnc, cellPadding;
- private String networkType;
+ private String networkType, SignalHeading;
 
  /** Called when the activity is first created. */
  @Override
@@ -113,12 +113,14 @@ public class WirelessInfo extends Activity {
     if (tm.getNetworkType() == TelephonyManager.NETWORK_TYPE_UMTS || tm.getNetworkType() == TelephonyManager.NETWORK_TYPE_HSDPA) {
      cellPadding = 8;
      networkType = "UMTS";
+     SignalHeading = "RSSI";
      /*
      cid = cid - 65536;
       */
     } else {
      cellPadding = 4;
      networkType = "GSM";
+     SignalHeading = "RSCP";
     }
 
     ((TextView) findViewById(R.id.other_txt)).setText("Network Type: "
@@ -157,7 +159,7 @@ public class WirelessInfo extends Activity {
     ConnectivityManager cm = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
     
     /** 
-    * Check the active network conenction.
+    * Check the active network connection.
     */
     NetworkInfo ani = cm.getActiveNetworkInfo();
     strResult = "No network available!!";
@@ -220,7 +222,7 @@ public class WirelessInfo extends Activity {
     /* —————————– */
     private class MyPhoneStateListener extends PhoneStateListener {
       /* Get the Signal strength from the provider, each time there is an update */
-      private int ss, ssdbm, cdmadbm;
+      private int ss, ber, ssdbm, cdmadbm;
 
       @Override
       public void onSignalStrengthsChanged(SignalStrength signalStrength) {
@@ -228,10 +230,13 @@ public class WirelessInfo extends Activity {
          cdmadbm = signalStrength.getEvdoDbm();
          int cdmaecio = signalStrength.getEvdoEcio();
          ss = signalStrength.getGsmSignalStrength();
+         ber = signalStrength.getGsmBitErrorRate();
+         
          
          ssdbm = getRSSI(ss);
-         ((TextView) findViewById(R.id.other_txt1)).setText("RSSI: -"+ ssdbm +"dBm");
-         Toast.makeText(getApplicationContext(), "CINR = "+ String.valueOf(signalStrength.getGsmSignalStrength()) +", -"+ ssdbm +"dBm, "+ cdmadbm +", "+ cdmaecio, Toast.LENGTH_SHORT).show();
+
+         ((TextView) findViewById(R.id.other_txt1)).setText(SignalHeading+": -"+ ssdbm +"dBm");
+         Toast.makeText(getApplicationContext(), "CINR = "+ String.valueOf(signalStrength.getGsmSignalStrength()) +", -"+ ssdbm +"dBm, "+ cdmadbm +", "+ cdmaecio+", BER ="+ber, Toast.LENGTH_SHORT).show();
       }
     };/* End of private Class */
 
