@@ -155,16 +155,25 @@ public class WirelessInfo extends Activity {
      * Make sure data services up
      */
     ConnectivityManager cm = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
-    NetworkInfo niw = cm.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-    boolean isWifiAvail = niw.isAvailable();
-    boolean isWifiConn = niw.isConnected();
     
-    NetworkInfo ni = cm.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
-    boolean isMobileAvail = ni.isAvailable();
-    boolean isMobileConn = ni.isConnected();
+    /** 
+    * Check the active network conenction.
+    */
+    NetworkInfo ani = cm.getActiveNetworkInfo();
     strResult = "No network available!!";
+
+    /**
+    * NetworkInfo niw = cm.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+    * boolean isWifiAvail = niw.isAvailable();
+    * boolean isWifiConn = niw.isConnected();   
+    * NetworkInfo ni = cm.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
+    * boolean isMobileAvail = ni.isAvailable();
+    * boolean isMobileConn = ni.isConnected();
+    * strResult = "No network available!!";    
+    * if ((isWifiAvail && isWifiConn) || (isMobileAvail && isMobileConn)) {
+    */
     
-    if ((isWifiAvail && isWifiConn) || (isMobileAvail && isMobileConn)) {
+    if(ani != null && ani.isConnected()) {
     /**
      * Seems that cid and lac shall be in hex. Cid should be padded with zero's
      * to 8 numbers if UMTS (3G) cell, otherwise to 4 numbers. Mcc padded to 3
