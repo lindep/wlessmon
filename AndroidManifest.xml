@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" 
 	  package="net.homelinux.inhere.wirelessinfo" 
-      android:versionCode="9"
-      android:versionName="1.1.8.1"
+      android:versionCode="10"
+      android:versionName="1.1.8.3"
       android:installLocation="preferExternal" >
     <application>
-         <activity android:name=".WirelessInfo" android:label="WirelessInfo 1.1.8.1">
+         <activity android:name=".WirelessInfo" android:label="WirelessInfo 1.1.8.3">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
@@ -17,5 +17,6 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
     <uses-sdk android:minSdkVersion="8" />
 </manifest>
