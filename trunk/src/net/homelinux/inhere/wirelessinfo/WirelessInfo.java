@@ -49,7 +49,7 @@ public class WirelessInfo extends Activity {
  MyPhoneStateListener MyListener;
  private GsmCellLocation location;
  private int cid, lac, mcc, mnc, cellPadding;
- private String networkType, SignalHeading;
+ private String networkType, SignalHeading, imsi;
 
  /** Called when the activity is first created. */
  @Override
@@ -71,6 +71,7 @@ public class WirelessInfo extends Activity {
     location = (GsmCellLocation) tm.getCellLocation();
     cid = location.getCid();
     lac = location.getLac();
+    imsi = tm.getSubscriberId();
 
     /*
      * Mcc and mnc is concatenated in the networkOperatorString. The first 3
@@ -139,6 +140,7 @@ public class WirelessInfo extends Activity {
       + getPaddedInt(mcc, 3));
     ((TextView) findViewById(R.id.TextView04)).setText("MNC: "
       + getPaddedInt(mnc, 2));
+    ((TextView) findViewById(R.id.TextViewImsi)).setText("IMSI: "+imsi);
    }
   });
 
