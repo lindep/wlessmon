@@ -60,6 +60,8 @@ public class WirelessInfo extends Activity {
   MyListener   = new MyPhoneStateListener();
   tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
   tm.listen(MyListener ,PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
+  imsi = tm.getSubscriberId();
+  ((TextView) findViewById(R.id.TextViewImsi)).setText("IMSI: "+imsi);
   
   /*
    * Setup a listener for the UpdateCellButton. Pressing this button will fetch
@@ -71,8 +73,7 @@ public class WirelessInfo extends Activity {
     location = (GsmCellLocation) tm.getCellLocation();
     cid = location.getCid();
     lac = location.getLac();
-    imsi = tm.getSubscriberId();
-
+    
     /*
      * Mcc and mnc is concatenated in the networkOperatorString. The first 3
      * chars is the mcc and the last 2 is the mnc.
@@ -140,7 +141,7 @@ public class WirelessInfo extends Activity {
       + getPaddedInt(mcc, 3));
     ((TextView) findViewById(R.id.TextView04)).setText("MNC: "
       + getPaddedInt(mnc, 2));
-    ((TextView) findViewById(R.id.TextViewImsi)).setText("IMSI: "+imsi);
+    
    }
   });
 
