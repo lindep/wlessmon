@@ -9,20 +9,7 @@ package net.homelinux.inhere.wirelessinfo;
  * Pieter Linde
  */
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.util.List;
-
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import android.app.Activity;
 import android.content.Context;
@@ -34,22 +21,26 @@ import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.telephony.SignalStrength;
 import android.telephony.gsm.GsmCellLocation;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.loopj.android.http.*;
+
 public class WirelessInfo extends Activity {
 
- private final static String API_KEY = "KJ7DB6kbP6UE4b5O3AskOMttTppKFGHDYuJ81J8T";
+ //private final static String API_KEY = "KJ7DB6kbP6UE4b5O3AskOMttTppKFGHDYuJ81J8T";
 
  private TelephonyManager tm;
  MyPhoneStateListener MyListener;
  private GsmCellLocation location;
  private int cid, lac, mcc, mnc, cellPadding;
  private String networkType, SignalHeading, imsi;
+ 
+ private TextView webPageText;
+
 
  /** Called when the activity is first created. */
  @Override
@@ -61,13 +52,19 @@ public class WirelessInfo extends Activity {
   tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
   tm.listen(MyListener ,PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
   imsi = tm.getSubscriberId();
+  
   ((TextView) findViewById(R.id.TextViewImsi)).setText("IMSI: "+imsi);
+  webPageText = (TextView) findViewById(R.id.webPageText);
+  
+  final AsyncHttpClient client = new AsyncHttpClient();
   
   /*
    * Setup a listener for the UpdateCellButton. Pressing this button will fetch
    * the current cell info from the phone.
    */
+  
   final Button UpdateCellButton = (Button) findViewById(R.id.UpdateCellButton);
+  
   UpdateCellButton.setOnClickListener(new View.OnClickListener() {
    public void onClick(View v) {
     location = (GsmCellLocation) tm.getCellLocation();
@@ -146,62 +143,45 @@ public class WirelessInfo extends Activity {
   });
 
   /*
-   * Setup a listener for the GetPositionButton. When pressing this button the
-   * cell info is sent to the server and hopefully we will get a longitude and
-   * latitude back.
+   * Setup a listener for the GetWebPageButton. When pressing this button the
+   * cell info is sent to the server and hopefully we will get a web page.
    */
-  final Button GetPositionButton = (Button) findViewById(R.id.GetPositionButton);
-  GetPositionButton.setOnClickListener(new View.OnClickListener() {
+  final Button GetWebPageAction = (Button) findViewById(R.id.GetWebPageButton);
+  GetWebPageAction.setOnClickListener(new View.OnClickListener() {
    public void onClick(View v) {
-
-    String strResult;
-    
-    /**
-     * Make sure data services up
-     */
+	   
     ConnectivityManager cm = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
+    webPageText.setText("Info:");
     
     /** 
     * Check the active network connection.
     */
     NetworkInfo ani = cm.getActiveNetworkInfo();
-    strResult = "No network available!!";
-
-    /**
-    * NetworkInfo niw = cm.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-    * boolean isWifiAvail = niw.isAvailable();
-    * boolean isWifiConn = niw.isConnected();   
-    * NetworkInfo ni = cm.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
-    * boolean isMobileAvail = ni.isAvailable();
-    * boolean isMobileConn = ni.isConnected();
-    * strResult = "No network available!!";    
-    * if ((isWifiAvail && isWifiConn) || (isMobileAvail && isMobileConn)) {
-    */
     
-    if(ani != null && ani.isConnected()) {
-    /**
-     * Seems that cid and lac shall be in hex. Cid should be padded with zero's
-     * to 8 numbers if UMTS (3G) cell, otherwise to 4 numbers. Mcc padded to 3
-     * numbers. Mnc padded to 2 numbers.
-     */
-    	try {
-    		// Update the current location
-    		updateLocation(getPaddedHex(cid, cellPadding), getPaddedHex(lac, 4),
-    				getPaddedInt(mnc, 2), getPaddedInt(mcc, 3));
-    		strResult = "Position updated!";
-    	} catch (IOException e) {
-    		strResult = "Error!\n" + e.getMessage();
-    	}
-    }
+    if (ani != null && ani.isConnected()) {
+	    //client.get("http://www.google.com", new AsyncHttpResponseHandler() {
+    	client.get("http://inhere.homelinux.net/test/xml_post.php?id=3&name=testing&score=555", new AsyncHttpResponseHandler() {
+	        @Override
+	        public void onSuccess(String response) {
+	            //System.out.println(response);
 
-    // Show an info Toast with the results of the updateLocation
-    // call.
-    Toast t = Toast.makeText(getApplicationContext(), strResult,
-      Toast.LENGTH_LONG);
-    t.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
-    t.show();
+	        	webPageText.setText(response);
+	        	Toast t = Toast.makeText(getApplicationContext(), "Web Page downloaded successful",
+	          	      Toast.LENGTH_LONG);
+	          	t.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
+	          	t.show();
+	        }
+	    });
+    }
+    else {
+    	String strResult = "No network available!!";
+    	Toast t = Toast.makeText(getApplicationContext(), strResult,
+    	      Toast.LENGTH_LONG);
+    	t.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
+    	t.show();
+    }
    }
-  });
+   });
  }
 
 
@@ -231,7 +211,7 @@ public class WirelessInfo extends Activity {
       public void onSignalStrengthsChanged(SignalStrength signalStrength) {
          super.onSignalStrengthsChanged(signalStrength);
          cdmadbm = signalStrength.getEvdoDbm();
-         int cdmaecio = signalStrength.getEvdoEcio();
+         //int cdmaecio = signalStrength.getEvdoEcio();
          ss = signalStrength.getGsmSignalStrength();
          ber = signalStrength.getGsmBitErrorRate();
          
@@ -239,7 +219,7 @@ public class WirelessInfo extends Activity {
          ssdbm = getRSSI(ss);
 
          ((TextView) findViewById(R.id.other_txt1)).setText(SignalHeading+": -"+ ssdbm +"dBm");
-         Toast.makeText(getApplicationContext(), "CINR = "+ String.valueOf(signalStrength.getGsmSignalStrength()) +", -"+ ssdbm +"dBm, "+ cdmadbm +", "+ cdmaecio+", BER ="+ber, Toast.LENGTH_SHORT).show();
+         //Toast.makeText(getApplicationContext(), "CINR = "+ String.valueOf(signalStrength.getGsmSignalStrength()) +", -"+ ssdbm +"dBm, "+ cdmadbm +", "+ cdmaecio+", BER ="+ber, Toast.LENGTH_SHORT).show();
       }
     };/* End of private Class */
 
@@ -298,107 +278,6 @@ public class WirelessInfo extends Activity {
    }
   }
   return str;
- }
-
- private void updateLocation(String cid, String lac, String mnc, String mcc)
-   throws IOException {
-  InputStream is = null;
-  ByteArrayOutputStream bos = null;
-  byte[] data = null;
-  try {
-
-   // Build the url
-   StringBuilder uri = new StringBuilder("http://cellid.labs.ericsson.net/");
-   // Set this param to xml to get the server response in XML instead
-   // of json
-   uri.append("json");
-   uri.append("/lookup?cellid=").append(cid);
-   uri.append("&mnc=").append(mnc);
-   uri.append("&mcc=").append(mcc);
-   uri.append("&lac=").append(lac);
-   uri.append("&key=").append(API_KEY);
-
-   // Create an HttpGet request
-   HttpGet request = new HttpGet(uri.toString());
-
-   // Send the HttpGet request
-   HttpClient httpClient = new DefaultHttpClient();
-   HttpResponse response = httpClient.execute(request);
-
-   // Check the response status
-   int status = response.getStatusLine().getStatusCode();
-   if (status != HttpURLConnection.HTTP_OK) {
-    switch (status) {
-    case HttpURLConnection.HTTP_NO_CONTENT:
-     throw new IOException("The cell could not be " + "found in the database");
-    case HttpURLConnection.HTTP_BAD_REQUEST:
-     throw new IOException("Check if some parameter "
-       + "is missing or misspelled");
-    case HttpURLConnection.HTTP_UNAUTHORIZED:
-     throw new IOException("Make sure the API key is " + "present and valid");
-    case HttpURLConnection.HTTP_FORBIDDEN:
-     throw new IOException("You have reached the limit"
-       + "for the number of requests per day. The "
-       + "maximum number of requests per day is " + "currently 500.");
-    case HttpURLConnection.HTTP_NOT_FOUND:
-     throw new IOException("The cell could not be found" + "in the database");
-    default:
-     throw new IOException("HTTP response code: " + status);
-    }
-   }
-
-   // The response was ok (HTTP_OK) so lets read the data
-   HttpEntity entity = response.getEntity();
-   is = entity.getContent();
-   bos = new ByteArrayOutputStream();
-   byte buf[] = new byte[256];
-   while (true) {
-    int rd = is.read(buf, 0, 256);
-    if (rd == -1)
-     break;
-    bos.write(buf, 0, rd);
-   }
-   bos.flush();
-   data = bos.toByteArray();
-   if (data != null) {
-    try {
-     // Parse the Json data
-     JSONObject position = new JSONObject(new String(data))
-       .getJSONObject("position");
-
-     // update the GUI items with the received position info
-     ((TextView) findViewById(R.id.position_longitude)).setText("Longitude: "
-       + position.getDouble("longitude"));
-     ((TextView) findViewById(R.id.position_latitude)).setText("Latitude: "
-       + position.getDouble("latitude"));
-     ((TextView) findViewById(R.id.position_name)).setText("Name: "
-       + position.getString("name"));
-     ((TextView) findViewById(R.id.position_accuracy)).setText("Accuracy: "
-       + position.getDouble("accuracy"));
-    } catch (JSONException e) {
-     e.printStackTrace();
-    } catch (Exception e) {
-     e.printStackTrace();
-    }
-   }
-  } catch (MalformedURLException e) {
-   Log.e("ERROR", e.getMessage());
-  } catch (IllegalArgumentException e) {
-   throw new IOException(
-     "URL was incorrect. Did you forget to set the API_KEY?");
-  } finally {
-   // make sure we clean up after us
-   try {
-    if (bos != null)
-     bos.close();
-   } catch (Exception e) {
-   }
-   try {
-    if (is != null)
-     is.close();
-   } catch (Exception e) {
-   }
-  }
  }
 }
 
