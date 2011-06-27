@@ -26,6 +26,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.net.TrafficStats;
 
 import com.loopj.android.http.*;
 
@@ -135,9 +136,8 @@ public class WirelessInfo extends Activity {
     ((TextView) findViewById(R.id.TextView02)).setText("LAC: "
       + getPaddedHex(lac, 4) + ": " + getPaddedInt(lac, 4));
     ((TextView) findViewById(R.id.TextView03)).setText("MCC: "
-      + getPaddedInt(mcc, 3));
-    ((TextView) findViewById(R.id.TextView04)).setText("MNC: "
-      + getPaddedInt(mnc, 2));
+      + getPaddedInt(mcc, 3)+", MNC: "+ getPaddedInt(mnc, 2));
+    //((TextView) findViewById(R.id.TextView04)).setText("MNC: "+ getPaddedInt(mnc, 2));
     
    }
   });
@@ -167,11 +167,19 @@ public class WirelessInfo extends Activity {
 
 	        	webPageText.setText(response);
 	        	Toast t = Toast.makeText(getApplicationContext(), "Web Page downloaded successful",
-	          	      Toast.LENGTH_LONG);
+	          	      Toast.LENGTH_SHORT);
 	          	t.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
 	          	t.show();
 	        }
 	    });
+    	
+    	if (TrafficStats.getMobileRxBytes() == TrafficStats.UNSUPPORTED) {
+    		((TextView) findViewById(R.id.txtNetStats)).setText("Stats: MobileRxBytes - UNSUPPORTED");
+    		
+    	}
+    	else {
+    		((TextView) findViewById(R.id.txtNetStats)).setText("RxBytes = "+String.valueOf(TrafficStats.getTotalRxBytes()));
+    	}
     }
     else {
     	String strResult = "No network available!!";
@@ -279,5 +287,7 @@ public class WirelessInfo extends Activity {
   }
   return str;
  }
+ 
+
 }
 
