@@ -123,7 +123,7 @@ public class WirelessInfo extends Activity {
      SignalHeading = "RSCP";
     }
 
-    ((TextView) findViewById(R.id.other_txt)).setText("Network Type: "
+    ((TextView) findViewById(R.id.dataType)).setText("Network Type: "
       + TelephonyManager.NETWORK_TYPE_UMTS + ":" + tm.getDataActivity());
 
     /*
@@ -139,6 +139,14 @@ public class WirelessInfo extends Activity {
       + getPaddedInt(mcc, 3)+", MNC: "+ getPaddedInt(mnc, 2));
     //((TextView) findViewById(R.id.TextView04)).setText("MNC: "+ getPaddedInt(mnc, 2));
     
+    if (TrafficStats.getMobileRxBytes() == TrafficStats.UNSUPPORTED) {
+		((TextView) findViewById(R.id.txtNetStats)).setText("Stats: RxBytes - UNSUPPORTED");
+		
+	}
+	else {
+		long TotalTxBytes = TrafficStats.getTotalTxBytes();
+		((TextView) findViewById(R.id.txtNetStats)).setText("Rx/Tx Bytes = "+String.valueOf(TrafficStats.getTotalRxBytes())+"/"+TotalTxBytes);
+	}
    }
   });
 
@@ -150,6 +158,8 @@ public class WirelessInfo extends Activity {
   GetWebPageAction.setOnClickListener(new View.OnClickListener() {
    public void onClick(View v) {
 	   
+	
+	
     ConnectivityManager cm = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
     webPageText.setText("Info:");
     
@@ -159,27 +169,34 @@ public class WirelessInfo extends Activity {
     NetworkInfo ani = cm.getActiveNetworkInfo();
     
     if (ani != null && ani.isConnected()) {
-	    //client.get("http://www.google.com", new AsyncHttpResponseHandler() {
+    	final long rxSByteSample = TrafficStats.getTotalRxBytes();
+    	final long txSByteSample = TrafficStats.getTotalTxBytes();
+    	final long start=System.currentTimeMillis();
+    	
+    	//client.get("http://www.google.com", new AsyncHttpResponseHandler() {
     	client.get("http://inhere.homelinux.net/test/xml_post.php?id=3&name=testing&score=555", new AsyncHttpResponseHandler() {
 	        @Override
 	        public void onSuccess(String response) {
 	            //System.out.println(response);
 
+	        	long rxEByteSample = TrafficStats.getTotalRxBytes();
+	        	long txEByteSample = TrafficStats.getTotalTxBytes();
+	        	long rxDByteSample = rxEByteSample - rxSByteSample;
+	        	long txDByteSample = txEByteSample - txSByteSample;
+	        	double updateDelta = (double) (System.currentTimeMillis()- start)/1000.00;
+	        	double rxStatsMb = (double)(rxDByteSample*8)/1024.00/1024.00;
+
+	        	((TextView) findViewById(R.id.txtWebNetStats)).setText("Delta time = "+updateDelta+" s, Thrput = "+rxStatsMb/updateDelta+" Mb/s, Delta Rx/Tx Bytes = "+(rxDByteSample*8)/1024+" kb/"+txDByteSample+" Bytes");
+	        	
 	        	webPageText.setText(response);
+	        	/*
 	        	Toast t = Toast.makeText(getApplicationContext(), "Web Page downloaded successful",
 	          	      Toast.LENGTH_SHORT);
 	          	t.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
 	          	t.show();
+	          	*/
 	        }
 	    });
-    	
-    	if (TrafficStats.getMobileRxBytes() == TrafficStats.UNSUPPORTED) {
-    		((TextView) findViewById(R.id.txtNetStats)).setText("Stats: MobileRxBytes - UNSUPPORTED");
-    		
-    	}
-    	else {
-    		((TextView) findViewById(R.id.txtNetStats)).setText("RxBytes = "+String.valueOf(TrafficStats.getTotalRxBytes()));
-    	}
     }
     else {
     	String strResult = "No network available!!";
