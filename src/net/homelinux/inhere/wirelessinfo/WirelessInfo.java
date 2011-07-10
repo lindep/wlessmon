@@ -10,9 +10,14 @@ package net.homelinux.inhere.wirelessinfo;
  */
 
 import java.util.List;
+import java.util.StringTokenizer;
 
 import android.app.Activity;
 import android.content.Context;
+import android.location.Criteria;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
@@ -21,6 +26,8 @@ import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.telephony.SignalStrength;
 import android.telephony.gsm.GsmCellLocation;
+import android.text.TextUtils;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
@@ -30,24 +37,57 @@ import android.net.TrafficStats;
 
 import com.loopj.android.http.*;
 
-public class WirelessInfo extends Activity {
+public class WirelessInfo extends Activity implements LocationListener {
 
  //private final static String API_KEY = "KJ7DB6kbP6UE4b5O3AskOMttTppKFGHDYuJ81J8T";
 
  private TelephonyManager tm;
  MyPhoneStateListener MyListener;
- private GsmCellLocation location;
+ private GsmCellLocation mobileLocation;
  private int cid, lac, mcc, mnc, cellPadding;
  private String networkType, SignalHeading, imsi;
  
  private TextView webPageText;
+ 
+ private TextView latituteField;
+ private TextView longitudeField;
+ private LocationManager locationManager;
+ private String provider;
+ 
+ private MyFtpTask mCurrentFtpTask = null;
+ 
+ ThrPutStats tps = null;
+ 
+ String testvar;
+ LoginDetails[] serverLogin = new LoginDetails[2];
 
-
- /** Called when the activity is first created. */
  @Override
  public void onCreate(Bundle savedInstanceState) {
   super.onCreate(savedInstanceState);
   setContentView(R.layout.main);
+  
+  latituteField = (TextView) findViewById(R.id.unknownLat);
+  longitudeField = (TextView) findViewById(R.id.unknownLong);
+  
+//Get the location manager
+	locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+	// Define the criteria how to select the locatioin provider -> use
+	// default
+	Criteria criteria = new Criteria();
+	provider = locationManager.getBestProvider(criteria, false);
+	Location location = locationManager.getLastKnownLocation(provider);
+
+	// Initialize the location fields
+	if (location != null) {
+		System.out.println("Provider " + provider + " has been selected.");
+		double lat = (location.getLatitude());
+		double lng = (location.getLongitude());
+		latituteField.setText(String.valueOf(lat));
+		longitudeField.setText(String.valueOf(lng));
+	} else {
+		latituteField.setText("Provider not available");
+		longitudeField.setText("Provider not available");
+	}
 
   MyListener   = new MyPhoneStateListener();
   tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
@@ -58,7 +98,7 @@ public class WirelessInfo extends Activity {
   webPageText = (TextView) findViewById(R.id.webPageText);
   
   final AsyncHttpClient client = new AsyncHttpClient();
-  
+
   /*
    * Setup a listener for the UpdateCellButton. Pressing this button will fetch
    * the current cell info from the phone.
@@ -68,9 +108,9 @@ public class WirelessInfo extends Activity {
   
   UpdateCellButton.setOnClickListener(new View.OnClickListener() {
    public void onClick(View v) {
-    location = (GsmCellLocation) tm.getCellLocation();
-    cid = location.getCid();
-    lac = location.getLac();
+	   mobileLocation = (GsmCellLocation) tm.getCellLocation();
+    cid = mobileLocation.getCid();
+    lac = mobileLocation.getLac();
     
     /*
      * Mcc and mnc is concatenated in the networkOperatorString. The first 3
@@ -215,6 +255,7 @@ public class WirelessInfo extends Activity {
    protected void onPause() {
       super.onPause();
       tm.listen(MyListener, PhoneStateListener.LISTEN_NONE);
+      locationManager.removeUpdates(this);
    }
 
     /* Called when the application resumes */
@@ -222,6 +263,7 @@ public class WirelessInfo extends Activity {
    protected void onResume() {
       super.onResume();
       tm.listen(MyListener,PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
+      locationManager.requestLocationUpdates(provider, 400, 1, this);
    }
 
 
@@ -305,6 +347,173 @@ public class WirelessInfo extends Activity {
   return str;
  }
  
+ @Override
+	public void onLocationChanged(Location location) {
+		double lat = (location.getLatitude());
+		double lng = (location.getLongitude());
+		latituteField.setText(String.valueOf(lat));
+		longitudeField.setText(String.valueOf(lng));
+	}
+
+	@Override
+	public void onStatusChanged(String provider, int status, Bundle extras) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void onProviderEnabled(String provider) {
+		Toast.makeText(this, "Enabled new provider " + provider,
+				Toast.LENGTH_SHORT).show();
+
+	}
+
+	@Override
+	public void onProviderDisabled(String provider) {
+		Toast.makeText(this, "Disenabled provider " + provider,
+				Toast.LENGTH_SHORT).show();
+	}
+	
+	public void onClickStartGetLogin (View v) {
+    	status ("onClickStartGetLogin");
+    	trace ("TestAH: onClickStartGetLogin: Start.");
+    	
+    	if (serverLogin[0] == null) {
+
+    	AsyncHttpClient client = new AsyncHttpClient();
+    	  client.get("http://inhere.homelinux.net/test/getinfo.php", new AsyncHttpResponseHandler() {
+    	      @Override
+    	      public void onSuccess(String response) {
+    	      	//text.setText(response);
+    	    	  trace ("TestAH: onClickStartGetLogin: before tokenizer.");
+    	    	  int servers = 0;
+    	    	  StringTokenizer st = new StringTokenizer(response, ";"); 
+    	    	  while(st.hasMoreTokens()) {
+    	    		  String s1 = st.nextToken();
+    	    		  serverLogin[servers] = new LoginDetails();
+    	    		  
+    	    		  StringTokenizer st1 = new StringTokenizer(s1, "#");
+    	        	  while(st1.hasMoreTokens()) {
+    	        		  serverLogin[servers].setHost(st1.nextToken());
+    	        		  serverLogin[servers].setPort(Integer.parseInt(st1.nextToken()));
+    	        		  serverLogin[servers].setId(st1.nextToken());
+    	        		  serverLogin[servers].setPasswd(st1.nextToken());
+    	        	  }
+    	        	  servers++;
+    	    	  }
+    	      }
+    	  });
+    	}
+    	
+    }
+	
+	public void onClickStartInternalFTP (View v) {
+    	status ("onClickStartFTP");
+    	trace ("TestAH: onClickStartFTP: Start.");
+    	
+    	MyFtpTask t = mCurrentFtpTask;
+        if (t != null) {
+        	trace ("TestAH: onClickStartFTP: Please wait for the previous task to finish.");
+           status ("Please wait for the previous task MyFtpTask to finish.");
+        } else {
+        	MyFtpTask ft = new MyFtpTask (this, "1MEG", serverLogin[1]);
+        	mCurrentFtpTask = ft;
+
+          // Start the task.
+          trace ("TestAH: onClickStart: Running MyFtpTask.execute.");
+          ft.execute ("1MEG");  
+        }
+    	
+    }
+ 
+	public void onClickStartFTP (View v) {
+    	status ("onClickStartFTP");
+    	trace ("TestAH: onClickStartFTP: Start.");
+    	
+    	MyFtpTask t = mCurrentFtpTask;
+        if (t != null) {
+        	trace ("TestAH: onClickStartFTP: Please wait for the previous task to finish.");
+           status ("Please wait for the previous task MyFtpTask to finish.");
+        } else {
+        	MyFtpTask ft = new MyFtpTask (this, "test.txt", serverLogin[0] );
+        	mCurrentFtpTask = ft;
+
+          // Start the task.
+          trace ("TestAH: onClickStart: Running MyFtpTask.execute.");
+          ft.execute ("test.txt");  
+        }
+    	
+    }
+    
+    public void onClickStopFTP (View v) {
+    
+    	trace ("TestAH.onClickStopFTP: Stop Button.");
+		
+		MyFtpTask t = mCurrentFtpTask;
+	    if (t == null) {
+	    	trace ("TestAH.onClickStopFTP: There is no task to disconnect.");
+	       status ("There is no task to disconnect.");
+	    } else {
+	    	endFtpBackgroundTasks(true);
+	      trace ("TestAH.onClickStopFTP: disconnect executed. Check the Logs.");
+	      status ("No more updates here. Check the Log.");
+	    }
+
+    }
+    public void onFtpTaskCompleted (MyFtpTask task, ThrPutStats moveCount, boolean cancelled)
+    {
+        status ("Task completed");
+        if (cancelled) {
+           status ("Task FTP cancelled after "+moveCount.getFileSizeBytes()+" Bytes, Delta RX Bytes = "+moveCount.getRxBytes());
+           trace ("TestAH.onFtpTaskCompleted: Task FTP cancelled after "+moveCount.getFileSizeBytes()+" Bytes, Delta RX Bytes = "+moveCount.getRxBytes());
+        } else {
+        	double rxStatsKb = (double)(moveCount.getRxBytes()*8)/1024.00;
+        	double thput = rxStatsKb / moveCount.getTime();
+        	
+           status ("Task FTP ended after "+moveCount.getFileSizeBytes()+" Bytes, Delta RX Bytes = "+moveCount.getRxBytes()+", Delta Time = "+moveCount.getTime()+", Throughput = "+thput+" Kb/s");
+           trace ("TestAH.onFtpTaskCompleted: Task FTP ended after "+moveCount.getFileSizeBytes()+" Bytes, Delta RX Bytes = "+moveCount.getRxBytes()+", Delta Time = "+moveCount.getTime()+", Throughput = "+thput+" Kb/s");
+       }
+        mCurrentFtpTask.disconnect ();
+        mCurrentFtpTask = null;
+    }
+    
+    private void endFtpBackgroundTasks (boolean cleanup) {
+        if (mCurrentFtpTask != null) {
+
+           // If we are cleaning up, it means that the UI is no longer available or will soon be unavailable.
+           if (cleanup) {
+        	   mCurrentFtpTask.disconnect ();
+           }
+
+           // Make sure the task is cancelled.
+           mCurrentFtpTask.cancel (true);
+
+           // Finish cleanup by removing the reference to the task
+           if (cleanup) {
+        	   mCurrentFtpTask = null;
+        	   trace ("TestAH.endFtpBackgroundTasks: cleanup. Check the Logs.");
+              status ("endFtpBackgroundTasks: Interrupted and ended task.");
+           } else {
+        	   trace ("TestAH.endFtpBackgroundTasks: Interrupted. not null.");
+        	   status ("endFtpBackgroundTasks: Interrupted task.");
+           }
+        }
+    }
+    
+    public void showFtpProgressOnScreen (int val) {
+    	//trace ("TestAH: showFtpProgressOnScreen: Got progress report. "+val+"%");
+    	status ("TestAH.showFtpProgressOnScreen: Got progress report from FTP task. "+val+"%");
+    }
+    
+    public void status (String message) {
+        TextView tv = (TextView) findViewById (R.id.textStatus);
+        tv.setText (message);
+    }
+    
+    public void trace (String msg) 
+    {
+        Log.d("Demo", msg);
+    }
 
 }
 
