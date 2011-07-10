@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" 
 	  package="net.homelinux.inhere.wirelessinfo" 
-      android:versionCode="27"
-      android:versionName="1.1.6.1"
+      android:versionCode="29"
+      android:versionName="1.1.7"
       android:installLocation="preferExternal" >
     <application>
-         <activity android:name=".WirelessInfo" android:label="WirelessInfo 1.1.6.1">
+         <activity android:name=".WirelessInfo" android:label="WirelessInfo 1.1.7">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
