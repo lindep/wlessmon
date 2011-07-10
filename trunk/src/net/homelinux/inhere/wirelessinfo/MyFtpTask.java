@@ -20,13 +20,20 @@ import org.apache.commons.net.ftp.FTPFile;
 
 import android.util.Log;
 
-public class MyFtpTask extends AsyncTask<String, Integer, Integer[]> {
+public class MyFtpTask extends AsyncTask<String, Integer, ThrPutStats> {
 	
 	long FileLenght = 0;
 	private WirelessInfo mActivity;
 	private String mFilename;
 	private boolean mCompleted = false;
 	private boolean mCancelled = false;
+	
+	private String mHost;
+	private int mPort = 21;
+	private String mId;
+	private String mPasswd;
+	
+	ThrPutStats tps = null;
 	
 	String strLine;
 	DataInputStream inputStream = null;
@@ -35,9 +42,13 @@ public class MyFtpTask extends AsyncTask<String, Integer, Integer[]> {
 	FTPFile[] ftpFiles = null;
 	int reply;
 	
-	public MyFtpTask (WirelessInfo context, String filename) {
+	public MyFtpTask (WirelessInfo context, String filename, LoginDetails slogin) {
 			mActivity = context;
 			mFilename = filename;
+			mHost = slogin.getHost();
+			mPort = slogin.getPort();
+			mId = slogin.getId();
+			mPasswd = slogin.getPasswd();
 			Log.d("Demo", "MyFtpTask: Done set vars in constructor");
 	}
 	
@@ -45,15 +56,17 @@ public class MyFtpTask extends AsyncTask<String, Integer, Integer[]> {
     protected void onCancelled () {
         mCompleted = true;
         mCancelled = true;
+        tps = new ThrPutStats(0, 0.0, 1);
         Integer[] mMovesCompleted;
         mMovesCompleted = new Integer[1];
         mMovesCompleted[0] = 1;
-        if (mActivity != null) mActivity.onFtpTaskCompleted (this, mMovesCompleted, mCancelled);
+        if (mActivity != null) mActivity.onFtpTaskCompleted (this, tps, mCancelled);
         disconnect ();
     }
 	
 	@Override
-	protected Integer[] doInBackground(String... arg0) {
+	protected ThrPutStats doInBackground(String... arg0) {
+
 		boolean done = false;
 		int i = 0;
 		Integer[] doneX;
@@ -61,9 +74,11 @@ public class MyFtpTask extends AsyncTask<String, Integer, Integer[]> {
 		doneX[0] = 0;
 		Log.d("Demo", "MyFtpTask.doInBackground start, var = "+arg0[0]);
 		String ftpFileName = arg0[0];
+		
+		/*
 		String hostName, id, passwd;
 		int port = 21;
-		
+
 		if (ftpFileName.equals("test.txt")) {
 			hostName = "inhere.homelinux.net";
 			port = 1998;
@@ -75,6 +90,7 @@ public class MyFtpTask extends AsyncTask<String, Integer, Integer[]> {
 			id = "drivetest";
 			passwd = "THRuu4ut";
 		}
+		*/
 			
 		//publishProgress( i );
 		
@@ -85,10 +101,8 @@ public class MyFtpTask extends AsyncTask<String, Integer, Integer[]> {
  	    	  FTPClient con = new FTPClient();
  	 		try
  	 		{
- 	 		    //con.connect("inhere.homelinux.net", 1998);
- 	 		    //if (con.login("test-ftp", "TestFtp123"))
- 	 			con.connect(hostName, port);
- 	 		    if (con.login(id, passwd))
+ 	 			con.connect(mHost, mPort);
+ 	 		    if (con.login(mId, mPasswd))
  	 		    {
  	 		    	con.enterRemotePassiveMode();
  	 		    	con.enterLocalActiveMode(); // important!
@@ -127,7 +141,7 @@ public class MyFtpTask extends AsyncTask<String, Integer, Integer[]> {
 			        
 			        long rxSByteSample = TrafficStats.getTotalRxBytes();
 			    	long txSByteSample = TrafficStats.getTotalTxBytes();
-			    	long start=System.currentTimeMillis();
+			    	long startTime = System.currentTimeMillis();
 			    	
 			    	InputStream myFileStream = null;
 			    	try {
@@ -163,15 +177,19 @@ public class MyFtpTask extends AsyncTask<String, Integer, Integer[]> {
  		        	long txEByteSample = TrafficStats.getTotalTxBytes();
  		        	long rxDByteSample = rxEByteSample - rxSByteSample;
  		        	long txDByteSample = txEByteSample - txSByteSample;
- 		        	double updateDelta = (double) (System.currentTimeMillis()- start)/1000.00;
+ 		        	long endTime = System.currentTimeMillis();
+ 		        	double deltaTime = ((double) endTime - (double) startTime)/1000.00;
  		        	double rxStatsKb = (double)(rxDByteSample*8)/1024.00;
+ 		        	Log.d ("Demo", "MyFtpTask.doInBackground Delta time = "+deltaTime+" s, starttime = "+startTime+", endtime = "+endTime);
  		        	
  		        	doneX[1] = (int) rxDByteSample;
- 		        	doneX[2] = (int) updateDelta;
- 		        	readableLength = FileUtils.byteCountToDisplaySize( (long) (rxDByteSample/updateDelta) );
- 		        	Log.d ("Demo", "MyFtpTask.doInBackground Thrput = "+rxStatsKb/updateDelta+" Kb/s");
+ 		        	doneX[2] = (int) deltaTime;
+ 		        	readableLength = FileUtils.byteCountToDisplaySize( (long) (rxDByteSample/deltaTime) );
+ 		        	Log.d ("Demo", "MyFtpTask.doInBackground Thrput = "+rxStatsKb/deltaTime+" Kb/s");
  		        	Log.d ("Demo", "MyFtpTask.doInBackground Thrput = "+readableLength+"/s");
- 		        	//((TextView) findViewById(R.id.txtWebNetStats)).setText("Delta time = "+updateDelta+" s, Thrput = "+rxStatsMb/updateDelta+" Mb/s, Delta Rx/Tx Bytes = "+(rxDByteSample*8)/1024+" kb/"+txDByteSample+" Bytes");
+ 		        	//((TextView) findViewById(R.id.txtWebNetStats)).setText("Delta time = "+deltaTime+" s, Thrput = "+rxStatsMb/updateDelta+" Mb/s, Delta Rx/Tx Bytes = "+(rxDByteSample*8)/1024+" kb/"+txDByteSample+" Bytes");
+ 		        	
+ 		        	tps = new ThrPutStats(length, deltaTime, rxDByteSample);
  		        	
  	 			      bout.close();
  	 			      myFileStream.close();
@@ -209,11 +227,11 @@ public class MyFtpTask extends AsyncTask<String, Integer, Integer[]> {
  	       }
 		}
 		Log.d ("Demo", "MyFtpTask.doInBackground finished, var i = "+i);
-		return doneX;
+		return tps;
 	}
 	
 	@Override 
-    protected void onPostExecute (Integer moveCount[]) {
+    protected void onPostExecute (ThrPutStats moveCount) {
         mCompleted = true;
         if (mActivity != null) mActivity.onFtpTaskCompleted (this, moveCount, mCancelled);
         disconnect ();
