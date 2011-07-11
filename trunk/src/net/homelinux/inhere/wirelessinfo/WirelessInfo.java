@@ -24,6 +24,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -194,12 +195,11 @@ public class WirelessInfo extends Activity implements LocationListener {
      */
     ((TextView) findViewById(R.id.networktype)).setText("Network Type: "
       + networkType + ": " + tm.getNetworkType());
-    ((TextView) findViewById(R.id.TextView01)).setText("CellID: "
+    ((TextView) findViewById(R.id.TextView01)).setText(": CellID: "
       + getCellId(cid, networkType)  + ": " + cid);
     ((TextView) findViewById(R.id.TextView02)).setText("LAC: "
-      + getPaddedHex(lac, 4) + ": " + getPaddedInt(lac, 4));
-    ((TextView) findViewById(R.id.TextView03)).setText("MCC: "
-      + getPaddedInt(mcc, 3)+", MNC: "+ getPaddedInt(mnc, 2));
+      + getPaddedInt(lac, 4)+": "+getPaddedHex(lac, 4));
+    ((TextView) findViewById(R.id.TextView03)).setText("MCC: "+ getPaddedInt(mcc, 3)+", MNC: "+ getPaddedInt(mnc, 2));
     //((TextView) findViewById(R.id.TextView04)).setText("MNC: "+ getPaddedInt(mnc, 2));
     
     if (TrafficStats.getMobileRxBytes() == TrafficStats.UNSUPPORTED) {
@@ -476,16 +476,13 @@ public class WirelessInfo extends Activity implements LocationListener {
 	public void onClickStartInternalFTP (View v) {
     	status ("onClickStartInternalFTP");
     	trace ("TestAH: onClickStartInternalFTP: Start.");
-
-    	setLoginDetails();
     	
     	if (setLoginDetails()) {
-    		status ("Start FTP session to server = "+serverLogin[1].getHost()+", port = "+serverLogin[1].getPort());
 	    	MyFtpTask t = mCurrentFtpTask;
 	    	if (t != null) {
 	        	trace ("TestAH: onClickStartFTP: Please wait for the previous task to finish.");
 	           status ("Please wait for the previous task MyFtpTask to finish.");
-	        } else if (serverLogin[0] == null) {
+	        } else if (serverLogin[1] == null) {
 	        	trace ("TestAH: onClickStartFTP: No Login details, please try again");
 		           status ("No Login details, please try again.");
 	        } else {
@@ -606,12 +603,13 @@ public class WirelessInfo extends Activity implements LocationListener {
    try {
 
     // Build the url
-    StringBuilder uri = new StringBuilder("http://inhere.homelinux.net/test/getinfo.php"); 
+    StringBuilder uri = new StringBuilder("http://inhere.homelinux.net/test/getinfoxml.php"); 
     /*StringBuilder uri = new StringBuilder("http://cellid.labs.ericsson.net/lookup?cellid=3CB5&mnc=24&mcc=530&lac=0002&key=KJ7DB6kbP6UE4b5O3AskOMttTppKFGHDYuJ81J8T");*/
     // Set this param to xml to get the server response in XML instead
     // of json
+    
+    uri.append("?alt=json");
     /*
-    uri.append("json");
     uri.append("/lookup?cellid=").append(cid);
     uri.append("&mnc=").append(mnc);
     uri.append("&mcc=").append(mcc);
@@ -664,6 +662,8 @@ public class WirelessInfo extends Activity implements LocationListener {
     
     trace ("WirelessInfo.getTestLoginDetails: Before adding data to string.");
     if (data != null) {
+    	
+    	/*
     	String strResponse = new String(data);
     	int servers = 0;
   	  	StringTokenizer st = new StringTokenizer(strResponse, ";"); 
@@ -680,14 +680,22 @@ public class WirelessInfo extends Activity implements LocationListener {
       	  }
       	  servers++;
   	  }
+  	  */
     	//status(new String(data));
-     //try {
+     try {
       // Parse the Json data
-      /*JSONObject position = new JSONObject(new String(data)).getJSONObject("position");
-      trace ("WirelessInfo.getTestLoginDetails: After Jason. "+position.get("accuracy"));*/
-      /*serverLogin[0] = new LoginDetails();
-      serverLogin[0].setHost(info.getString("server"));
-      serverLogin[0].setPort(info.getInt("port"));*/
+      JSONArray info = new JSONObject(new String(data)).getJSONArray("info");
+      //trace ("WirelessInfo.getTestLoginDetails: After Json. "+position.get("accuracy"));*/
+      int numVals = info.length();
+      for (int i = 0; i < numVals; i++) {
+    	  JSONObject jobj = info.getJSONObject(i);
+    	  
+	      serverLogin[i] = new LoginDetails();
+	      serverLogin[i].setHost(jobj.getString("server"));
+	      serverLogin[i].setPort(jobj.getInt("port"));
+	      serverLogin[i].setId(jobj.getString("id"));
+	      serverLogin[i].setPasswd(jobj.getString("passwd"));
+      }
       
 /*
       // update the GUI items with the received position info
@@ -700,13 +708,13 @@ public class WirelessInfo extends Activity implements LocationListener {
       ((TextView) findViewById(R.id.position_accuracy)).setText("Accuracy: "
         + position.getDouble("accuracy"));
       */
-    /* } catch (JSONException e) {
+     } catch (JSONException e) {
     	 trace (e.getMessage());
       e.printStackTrace();
      } catch (Exception e) {
     	 trace (e.getMessage());
       e.printStackTrace();
-     }*/
+     }
     }
    } catch (MalformedURLException e) {
     Log.e("ERROR", e.getMessage());
