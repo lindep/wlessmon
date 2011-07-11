@@ -75,23 +75,6 @@ public class MyFtpTask extends AsyncTask<String, Integer, ThrPutStats> {
 		Log.d("Demo", "MyFtpTask.doInBackground start, var = "+arg0[0]);
 		String ftpFileName = arg0[0];
 		
-		/*
-		String hostName, id, passwd;
-		int port = 21;
-
-		if (ftpFileName.equals("test.txt")) {
-			hostName = "inhere.homelinux.net";
-			port = 1998;
-			id = "test-ftp";
-			passwd = "TestFtp123";
-		}
-		else {
-			hostName = "118.148.1.20";
-			id = "drivetest";
-			passwd = "THRuu4ut";
-		}
-		*/
-			
 		//publishProgress( i );
 		
 		while (!done) {

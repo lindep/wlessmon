@@ -9,10 +9,26 @@ package net.homelinux.inhere.wirelessinfo;
  * Pieter Linde
  */
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.util.List;
 import java.util.StringTokenizer;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.util.EntityUtils;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.location.Criteria;
 import android.location.Location;
@@ -29,6 +45,8 @@ import android.telephony.gsm.GsmCellLocation;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -40,6 +58,8 @@ import com.loopj.android.http.*;
 public class WirelessInfo extends Activity implements LocationListener {
 
  //private final static String API_KEY = "KJ7DB6kbP6UE4b5O3AskOMttTppKFGHDYuJ81J8T";
+	
+	private ProgressDialog progressDialog;
 
  private TelephonyManager tm;
  MyPhoneStateListener MyListener;
@@ -71,7 +91,7 @@ public class WirelessInfo extends Activity implements LocationListener {
   
 //Get the location manager
 	locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-	// Define the criteria how to select the locatioin provider -> use
+	// Define the criteria how to select the location provider -> use
 	// default
 	Criteria criteria = new Criteria();
 	provider = locationManager.getBestProvider(criteria, false);
@@ -248,6 +268,12 @@ public class WirelessInfo extends Activity implements LocationListener {
    }
    });
  }
+ 
+ public boolean onCreateOptionsMenu(Menu menu){
+	 MenuInflater inflater = getMenuInflater();
+	 inflater.inflate(R.menu.menu, menu);
+	 return true;
+ }
 
 
     /* Called when the application is minimized */
@@ -378,71 +404,92 @@ public class WirelessInfo extends Activity implements LocationListener {
     	status ("onClickStartGetLogin");
     	trace ("TestAH: onClickStartGetLogin: Start.");
     	
-    	if (serverLogin[0] == null) {
-
-    	AsyncHttpClient client = new AsyncHttpClient();
-    	  client.get("http://inhere.homelinux.net/test/getinfo.php", new AsyncHttpResponseHandler() {
-    	      @Override
-    	      public void onSuccess(String response) {
-    	      	//text.setText(response);
-    	    	  trace ("TestAH: onClickStartGetLogin: before tokenizer.");
-    	    	  int servers = 0;
-    	    	  StringTokenizer st = new StringTokenizer(response, ";"); 
-    	    	  while(st.hasMoreTokens()) {
-    	    		  String s1 = st.nextToken();
-    	    		  serverLogin[servers] = new LoginDetails();
-    	    		  
-    	    		  StringTokenizer st1 = new StringTokenizer(s1, "#");
-    	        	  while(st1.hasMoreTokens()) {
-    	        		  serverLogin[servers].setHost(st1.nextToken());
-    	        		  serverLogin[servers].setPort(Integer.parseInt(st1.nextToken()));
-    	        		  serverLogin[servers].setId(st1.nextToken());
-    	        		  serverLogin[servers].setPasswd(st1.nextToken());
-    	        	  }
-    	        	  servers++;
-    	    	  }
-    	      }
-    	  });
-    	}
-    	
+    	setLoginDetails();
     }
 	
-	public void onClickStartInternalFTP (View v) {
-    	status ("onClickStartFTP");
-    	trace ("TestAH: onClickStartFTP: Start.");
-    	
-    	MyFtpTask t = mCurrentFtpTask;
-        if (t != null) {
-        	trace ("TestAH: onClickStartFTP: Please wait for the previous task to finish.");
-           status ("Please wait for the previous task MyFtpTask to finish.");
-        } else {
-        	MyFtpTask ft = new MyFtpTask (this, "1MEG", serverLogin[1]);
-        	mCurrentFtpTask = ft;
+	private boolean setLoginDetails() {
+		
+		if (serverLogin.length > 0 && serverLogin[0] != null) {
+			status ("setLoginDetails: Login info good, no need to get.");
+			return true;
+		}
+		
+		progressDialog = ProgressDialog.show(this, "Please wait....", "Retrieving Login Details");
+		
+    	new Thread(new Runnable(){
+    		public void run(){
+    			try {
+    				getTestLoginDetails();
+    				progressDialog.dismiss();
+    			} catch (IOException e) {
+    				status ("setLoginDetails: Failure. "+e.getMessage());
+    			}
+    			
+    			/*
+    			try {
+    				Thread.sleep(seconds * 1000);
+    				getXML();
+					progressDialog.dismiss();
+					
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				*/
+    		}
+    	}).start();
+		
+		
 
-          // Start the task.
-          trace ("TestAH: onClickStart: Running MyFtpTask.execute.");
-          ft.execute ("1MEG");  
-        }
+		return true;
+	}
+	
+	public void onClickStartInternalFTP (View v) {
+    	status ("onClickStartInternalFTP");
+    	trace ("TestAH: onClickStartInternalFTP: Start.");
+
+    	setLoginDetails();
     	
+    	if (setLoginDetails()) {
+    		status ("Start FTP session to server = "+serverLogin[1].getHost()+", port = "+serverLogin[1].getPort());
+	    	MyFtpTask t = mCurrentFtpTask;
+	        if (t != null) {
+	        	trace ("TestAH: onClickStartFTP: Please wait for the previous task to finish.");
+	           status ("Please wait for the previous task MyFtpTask to finish.");
+	        } else {
+	        	MyFtpTask ft = new MyFtpTask (this, "1MEG", serverLogin[1]);
+	        	mCurrentFtpTask = ft;
+	
+	          // Start the task.
+	          trace ("TestAH: onClickStart: Running MyFtpTask.execute.");
+	          ft.execute ("1MEG");  
+	        }
+    	}
+    	else {
+    		status ("Failed Getting new login details!!!");
+    	}
     }
  
 	public void onClickStartFTP (View v) {
     	status ("onClickStartFTP");
     	trace ("TestAH: onClickStartFTP: Start.");
     	
-    	MyFtpTask t = mCurrentFtpTask;
-        if (t != null) {
-        	trace ("TestAH: onClickStartFTP: Please wait for the previous task to finish.");
-           status ("Please wait for the previous task MyFtpTask to finish.");
-        } else {
-        	MyFtpTask ft = new MyFtpTask (this, "test.txt", serverLogin[0] );
-        	mCurrentFtpTask = ft;
-
-          // Start the task.
-          trace ("TestAH: onClickStart: Running MyFtpTask.execute.");
-          ft.execute ("test.txt");  
-        }
-    	
+    	if (setLoginDetails()) {
+	    	MyFtpTask t = mCurrentFtpTask;
+	        if (t != null) {
+	        	trace ("TestAH: onClickStartFTP: Please wait for the previous task to finish.");
+	           status ("Please wait for the previous task MyFtpTask to finish.");
+	        } else {
+	        	MyFtpTask ft = new MyFtpTask (this, "test.txt", serverLogin[0] );
+	        	mCurrentFtpTask = ft;
+	
+	          // Start the task.
+	          trace ("TestAH: onClickStart: Running MyFtpTask.execute.");
+	          ft.execute ("test.txt");  
+	        }
+    	}
+    	else {
+    		status ("Failed Getting new login details!!!");
+    	}
     }
     
     public void onClickStopFTP (View v) {
@@ -514,6 +561,136 @@ public class WirelessInfo extends Activity implements LocationListener {
     {
         Log.d("Demo", msg);
     }
+    
+    private void getTestLoginDetails() throws IOException {
+    	trace ("WirelessInfo.getTestLoginDetails: Start.");
+   InputStream is = null;
+   ByteArrayOutputStream bos = null;
+   byte[] data = null;
+   try {
+
+    // Build the url
+    StringBuilder uri = new StringBuilder("http://inhere.homelinux.net/test/getinfo.php"); 
+    /*StringBuilder uri = new StringBuilder("http://cellid.labs.ericsson.net/lookup?cellid=3CB5&mnc=24&mcc=530&lac=0002&key=KJ7DB6kbP6UE4b5O3AskOMttTppKFGHDYuJ81J8T");*/
+    // Set this param to xml to get the server response in XML instead
+    // of json
+    /*
+    uri.append("json");
+    uri.append("/lookup?cellid=").append(cid);
+    uri.append("&mnc=").append(mnc);
+    uri.append("&mcc=").append(mcc);
+    uri.append("&lac=").append(lac);
+    uri.append("&key=").append(API_KEY);
+	*/
+    // Create an HttpGet request
+    HttpGet request = new HttpGet(uri.toString());
+
+    // Send the HttpGet request
+    HttpClient httpClient = new DefaultHttpClient();
+    HttpResponse response = httpClient.execute(request);
+
+    // Check the response status
+    int status = response.getStatusLine().getStatusCode();
+    if (status != HttpURLConnection.HTTP_OK) {
+     switch (status) {
+     case HttpURLConnection.HTTP_NO_CONTENT:
+      throw new IOException("The cell could not be " + "found in the database");
+     case HttpURLConnection.HTTP_BAD_REQUEST:
+      throw new IOException("Check if some parameter "
+        + "is missing or misspelled");
+     case HttpURLConnection.HTTP_UNAUTHORIZED:
+      throw new IOException("Make sure the API key is " + "present and valid");
+     case HttpURLConnection.HTTP_FORBIDDEN:
+      throw new IOException("You have reached the limit"
+        + "for the number of requests per day. The "
+        + "maximum number of requests per day is " + "currently 500.");
+     case HttpURLConnection.HTTP_NOT_FOUND:
+      throw new IOException("The cell could not be found" + "in the database");
+     default:
+      throw new IOException("HTTP response code: " + status);
+     }
+    }
+    trace ("WirelessInfo.getTestLoginDetails: After http connection.");
+
+    // The response was ok (HTTP_OK) so lets read the data
+    HttpEntity entity = response.getEntity();
+    is = entity.getContent();
+    bos = new ByteArrayOutputStream();
+    byte buf[] = new byte[256];
+    while (true) {
+     int rd = is.read(buf, 0, 256);
+     if (rd == -1)
+      break;
+     bos.write(buf, 0, rd);
+    }
+    bos.flush();
+    data = bos.toByteArray();
+    
+    trace ("WirelessInfo.getTestLoginDetails: Before adding data to string.");
+    if (data != null) {
+    	String strResponse = new String(data);
+    	int servers = 0;
+  	  	StringTokenizer st = new StringTokenizer(strResponse, ";"); 
+  	  	while(st.hasMoreTokens()) {
+  		  String s1 = st.nextToken();
+  		  serverLogin[servers] = new LoginDetails();
+  		  
+  		  StringTokenizer st1 = new StringTokenizer(s1, "#");
+      	  while(st1.hasMoreTokens()) {
+      		  serverLogin[servers].setHost(st1.nextToken());
+      		  serverLogin[servers].setPort(Integer.parseInt(st1.nextToken()));
+      		  serverLogin[servers].setId(st1.nextToken());
+      		  serverLogin[servers].setPasswd(st1.nextToken());
+      	  }
+      	  servers++;
+  	  }
+    	//status(new String(data));
+     //try {
+      // Parse the Json data
+      /*JSONObject position = new JSONObject(new String(data)).getJSONObject("position");
+      trace ("WirelessInfo.getTestLoginDetails: After Jason. "+position.get("accuracy"));*/
+      /*serverLogin[0] = new LoginDetails();
+      serverLogin[0].setHost(info.getString("server"));
+      serverLogin[0].setPort(info.getInt("port"));*/
+      
+/*
+      // update the GUI items with the received position info
+      ((TextView) findViewById(R.id.position_longitude)).setText("Longitude: "
+        + position.getDouble("longitude"));
+      ((TextView) findViewById(R.id.position_latitude)).setText("Latitude: "
+        + position.getDouble("latitude"));
+      ((TextView) findViewById(R.id.position_name)).setText("Name: "
+        + position.getString("name"));
+      ((TextView) findViewById(R.id.position_accuracy)).setText("Accuracy: "
+        + position.getDouble("accuracy"));
+      */
+    /* } catch (JSONException e) {
+    	 trace (e.getMessage());
+      e.printStackTrace();
+     } catch (Exception e) {
+    	 trace (e.getMessage());
+      e.printStackTrace();
+     }*/
+    }
+   } catch (MalformedURLException e) {
+    Log.e("ERROR", e.getMessage());
+   } catch (IllegalArgumentException e) {
+    throw new IOException(
+      "URL was incorrect. Did you forget to set the API_KEY?");
+   } finally {
+    // make sure we clean up after us
+    try {
+     if (bos != null)
+      bos.close();
+    } catch (Exception e) {
+    }
+    try {
+     if (is != null)
+      is.close();
+    } catch (Exception e) {
+    }
+   }
+  }
 
 }
 
