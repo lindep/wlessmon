@@ -30,12 +30,14 @@ import org.json.JSONObject;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.database.Cursor;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.os.Bundle;
 import android.telephony.NeighboringCellInfo;
 import android.telephony.PhoneStateListener;
@@ -47,6 +49,7 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -268,11 +271,24 @@ public class WirelessInfo extends Activity implements LocationListener {
    }
    });
  }
- 
+ @Override
  public boolean onCreateOptionsMenu(Menu menu){
 	 MenuInflater inflater = getMenuInflater();
 	 inflater.inflate(R.menu.menu, menu);
 	 return true;
+ }
+ 
+ @Override
+ public boolean onOptionsItemSelected(MenuItem item) {
+     switch (item.getItemId()) {
+         case R.id.icon:     Toast.makeText(this, "You pressed the icon!", Toast.LENGTH_LONG).show();
+                             break;
+         case R.id.text:     Toast.makeText(this, "You pressed the text!", Toast.LENGTH_LONG).show();
+                             break;
+         case R.id.icontext: Toast.makeText(this, "You pressed the icon and text!", Toast.LENGTH_LONG).show();
+                             break;
+     }
+     return true;
  }
 
 
@@ -405,6 +421,25 @@ public class WirelessInfo extends Activity implements LocationListener {
     	trace ("TestAH: onClickStartGetLogin: Start.");
     	
     	setLoginDetails();
+    	
+    	Cursor mCursor = getContentResolver().query(Uri.parse("content://telephony/carriers"), new String[] {"name", "apn", "current"}, "current=1", null, null); 
+                        if (mCursor!=null) { 
+                                try { 
+                                if (mCursor.moveToFirst()) { 
+                                	int i = 0;
+                                	int t = mCursor.getCount();
+                                	String name = "";
+                                	while (i < t) {
+                                		name = name+", "+mCursor.getString(0)+", "+mCursor.getString(1)+", "+mCursor.getString(2); 
+                                        status ("APN Name = "+name+", rows = "+mCursor.getCount()+", apn = "+mCursor.getString(2));
+                                        i++;
+                                        mCursor.moveToNext();
+                                	}
+                                } 
+                                } finally { 
+                                        mCursor.close(); 
+                                } 
+                        }
     }
 	
 	private boolean setLoginDetails() {
@@ -415,6 +450,15 @@ public class WirelessInfo extends Activity implements LocationListener {
 		}
 		
 		progressDialog = ProgressDialog.show(this, "Please wait....", "Retrieving Login Details");
+		/*
+		try {
+			getTestLoginDetails();
+			progressDialog.dismiss();
+		} catch (IOException e) {
+			status ("setLoginDetails: Failure. "+e.getMessage());
+		}
+		*/
+		
 		
     	new Thread(new Runnable(){
     		public void run(){
@@ -424,23 +468,9 @@ public class WirelessInfo extends Activity implements LocationListener {
     			} catch (IOException e) {
     				status ("setLoginDetails: Failure. "+e.getMessage());
     			}
-    			
-    			/*
-    			try {
-    				Thread.sleep(seconds * 1000);
-    				getXML();
-					progressDialog.dismiss();
-					
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-				*/
     		}
     	}).start();
-		
-		
-
-		return true;
+    	return true;
 	}
 	
 	public void onClickStartInternalFTP (View v) {
@@ -452,9 +482,12 @@ public class WirelessInfo extends Activity implements LocationListener {
     	if (setLoginDetails()) {
     		status ("Start FTP session to server = "+serverLogin[1].getHost()+", port = "+serverLogin[1].getPort());
 	    	MyFtpTask t = mCurrentFtpTask;
-	        if (t != null) {
+	    	if (t != null) {
 	        	trace ("TestAH: onClickStartFTP: Please wait for the previous task to finish.");
 	           status ("Please wait for the previous task MyFtpTask to finish.");
+	        } else if (serverLogin[0] == null) {
+	        	trace ("TestAH: onClickStartFTP: No Login details, please try again");
+		           status ("No Login details, please try again.");
 	        } else {
 	        	MyFtpTask ft = new MyFtpTask (this, "1MEG", serverLogin[1]);
 	        	mCurrentFtpTask = ft;
@@ -472,12 +505,15 @@ public class WirelessInfo extends Activity implements LocationListener {
 	public void onClickStartFTP (View v) {
     	status ("onClickStartFTP");
     	trace ("TestAH: onClickStartFTP: Start.");
-    	
+
     	if (setLoginDetails()) {
 	    	MyFtpTask t = mCurrentFtpTask;
-	        if (t != null) {
+	    	if (t != null) {
 	        	trace ("TestAH: onClickStartFTP: Please wait for the previous task to finish.");
 	           status ("Please wait for the previous task MyFtpTask to finish.");
+	        } else if (serverLogin[0] == null) {
+	        	trace ("TestAH: onClickStartFTP: No Login details, please try again");
+		           status ("No Login details, please try again.");
 	        } else {
 	        	MyFtpTask ft = new MyFtpTask (this, "test.txt", serverLogin[0] );
 	        	mCurrentFtpTask = ft;
