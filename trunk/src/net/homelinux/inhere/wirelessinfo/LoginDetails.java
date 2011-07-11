@@ -7,7 +7,7 @@ public class LoginDetails {
 	private String mPasswd;
 	
 	LoginDetails() {
-		//mPort = 21;
+		mPort = 21;
 	}
 	
 	void setHost(String host) {
