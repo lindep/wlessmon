@@ -495,51 +495,72 @@ public class WirelessInfo extends Activity implements LocationListener {
 		Toast.makeText(this, "Disenabled provider " + provider,
 				Toast.LENGTH_SHORT).show();
 	}
+	
+	private boolean checkAPNSettings() throws WirelessInfoException {
+		status("checkAPNSettings");
+		trace("WirelessInfo: checkAPNSettings: Start.");
+		
+		Cursor mCursor = getContentResolver().query(
+				Uri.parse("content://telephony/carriers"),
+				new String[] { "name", "apn", "current" }, "current=1",
+				null, null);	
+		if (mCursor != null && mCursor.getCount() > 0) {
+			try {
+				if (mCursor.moveToFirst()) {
+					int rowCount = mCursor.getCount();
+					int i = 0;
+					String name = "";
+					String apn;
+					boolean foundAPN = false;
+					while (i < rowCount) {
+						apn = mCursor.getString(1);
+						if (apn.equals("internet-test")) {
+							foundAPN = true;
+							status("Please make sure APN (internet-test) is the active APN.");
+						}
+						/*name = name + ", " + mCursor.getString(0) + ", "
+								+ mCursor.getString(1) + ", "
+								+ mCursor.getString(2);
+						status("APN Name = " + name + ", rows = "
+								+ mCursor.getCount() + ", apn = "
+								+ mCursor.getString(2));*/
+						i++;
+						mCursor.moveToNext();
+					}
+					if (!foundAPN) {
+						throw new WirelessInfoException("Please create APN (internet-test) to be able to connect to internal FTP server.");
+					}
+				} 
+			} finally {	
+				mCursor.close();
+			}
+		}
+		else {
+			throw new WirelessInfoException("Please create APN (internet-test) to be able to connect to internal FTP server.");
+		}
+		return true;
+	}
 
 	public void onClickStartGetLogin(View v) {
 		status("onClickStartGetLogin");
 		trace("TestAH: onClickStartGetLogin: Start.");
-		/*
-		 * File ftpdir = new File(Environment.getExternalStorageDirectory() +
-		 * "/ftp-test1"); if (! (ftpdir.exists() || ftpdir.isDirectory())) {
-		 * status ("Please create Dir on sdcard. (/sdcard/ftp-test)"); Toast t =
-		 * Toast.makeText(getApplicationContext(),
-		 * "Please create dir on SDCARD (/sdcard/ftp-test)",
-		 * Toast.LENGTH_SHORT); t.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
-		 * t.show(); } else {
-		 */
-
+		
 		try {
-		setLoginDetails();
-
-			Cursor mCursor = getContentResolver().query(
-					Uri.parse("content://telephony/carriers"),
-					new String[] { "name", "apn", "current" }, "current=1",
-					null, null);
-			if (mCursor != null) {
-				try {
-					if (mCursor.moveToFirst()) {
-						int i = 0;
-						int t = mCursor.getCount();
-						String name = "";
-						while (i < t) {
-							name = name + ", " + mCursor.getString(0) + ", "
-									+ mCursor.getString(1) + ", "
-									+ mCursor.getString(2);
-							status("APN Name = " + name + ", rows = "
-									+ mCursor.getCount() + ", apn = "
-									+ mCursor.getString(2));
-							i++;
-							mCursor.moveToNext();
-						}
-					}
-				} finally {
-					mCursor.close();
-				}
+			checkAPNSettings();
+			
+			try {
+				setLoginDetails();
+			} catch (WirelessInfoException e) {
+				status(e.getMessage());
 			}
 		} catch (WirelessInfoException e) {
 			status(e.getMessage());
+			Toast t = Toast.makeText(getApplicationContext(),e.getMessage(),Toast.LENGTH_SHORT);
+			t.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
+			t.show();
 		}
+
+		
 	}
 
 	private boolean setLoginDetails() throws WirelessInfoException {
@@ -587,27 +608,41 @@ public class WirelessInfo extends Activity implements LocationListener {
 	public void onClickStartInternalFTP(View v) {
 		status("onClickStartInternalFTP");
 		trace("TestAH: onClickStartInternalFTP: Start.");
-
+		
 		try {
-			setLoginDetails();
-			MyFtpTask t = mCurrentFtpTask;
-			if (t != null) {
-				trace("TestAH: onClickStartFTP: Please wait for the previous task to finish.");
-				status("Please wait for the previous task MyFtpTask to finish.");
-			} else if (serverLogin[1] == null) {
-				trace("TestAH: onClickStartFTP: No Login details, please try again");
-				status("No Login details, please try again.");
-			} else {
-				MyFtpTask ft = new MyFtpTask(this, "1MEG", serverLogin[1]);
-				mCurrentFtpTask = ft;
+			checkAPNSettings();
+			
+			try {
+				setLoginDetails();
+				MyFtpTask t = mCurrentFtpTask;
+				if (t != null) {
+					trace("TestAH: onClickStartFTP: Please wait for the previous task to finish.");
+					status("Please wait for the previous task MyFtpTask to finish.");
+				} else if (serverLogin[1] == null) {
+					trace("TestAH: onClickStartFTP: No Login details, please try again");
+					status("No Login details, please try again.");
+				} else {
+					MyFtpTask ft = new MyFtpTask(this, "1MEG", serverLogin[1]);
+					mCurrentFtpTask = ft;
 
-				// Start the task.
-				trace("TestAH: onClickStart: Running MyFtpTask.execute.");
-				ft.execute("1MEG");
+					// Start the task.
+					trace("TestAH: onClickStart: Running MyFtpTask.execute.");
+					ft.execute("1MEG");
+				}
+			} catch (WirelessInfoException e) {
+				status(e.getMessage());
 			}
+			
 		} catch (WirelessInfoException e) {
 			status(e.getMessage());
+			Toast t = Toast.makeText(getApplicationContext(),
+					e.getMessage(),
+					Toast.LENGTH_SHORT);
+			t.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
+			t.show();
 		}
+
+		
 	}
 
 	public void onClickStartFTP(View v) {
@@ -794,23 +829,6 @@ public class WirelessInfo extends Activity implements LocationListener {
 
 			trace("WirelessInfo.getTestLoginDetails: Before adding data to string.");
 			if (data != null) {
-
-				/*
-				 * String strResponse = new String(data); int servers = 0;
-				 * StringTokenizer st = new StringTokenizer(strResponse, ";");
-				 * while(st.hasMoreTokens()) { String s1 = st.nextToken();
-				 * serverLogin[servers] = new LoginDetails();
-				 * 
-				 * StringTokenizer st1 = new StringTokenizer(s1, "#");
-				 * while(st1.hasMoreTokens()) {
-				 * serverLogin[servers].setHost(st1.nextToken());
-				 * serverLogin[servers
-				 * ].setPort(Integer.parseInt(st1.nextToken()));
-				 * serverLogin[servers].setId(st1.nextToken());
-				 * serverLogin[servers].setPasswd(st1.nextToken()); } servers++;
-				 * }
-				 */
-				// status(new String(data));
 				try {
 					// Parse the Json data
 					JSONArray info = new JSONObject(new String(data))
