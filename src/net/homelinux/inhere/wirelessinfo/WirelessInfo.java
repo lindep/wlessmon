@@ -327,9 +327,13 @@ public class WirelessInfo extends Activity implements LocationListener {
 			Toast.makeText(this, "You pressed the icon!", Toast.LENGTH_LONG)
 					.show();
 			break;
-		case R.id.text:
-			Toast.makeText(this, "You pressed the text!", Toast.LENGTH_LONG)
-					.show();
+		case R.id.mclearlogin:
+			try {
+				clearLoginDetails();
+				status("Login details cleared.");
+			} catch (WirelessInfoException e) {
+				status(e.getMessage());
+			}
 			break;
 		case R.id.icontext:
 			Toast.makeText(this, "You pressed the icon and text!",
@@ -540,27 +544,16 @@ public class WirelessInfo extends Activity implements LocationListener {
 		}
 		return true;
 	}
-
-	public void onClickStartGetLogin(View v) {
-		status("onClickStartGetLogin");
-		trace("TestAH: onClickStartGetLogin: Start.");
-		
-		try {
-			checkAPNSettings();
-			
-			try {
-				setLoginDetails();
-			} catch (WirelessInfoException e) {
-				status(e.getMessage());
-			}
-		} catch (WirelessInfoException e) {
-			status(e.getMessage());
-			Toast t = Toast.makeText(getApplicationContext(),e.getMessage(),Toast.LENGTH_SHORT);
-			t.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
-			t.show();
+	
+	private boolean clearLoginDetails() throws WirelessInfoException {
+		if (serverLogin.length > 0 && serverLogin[0] != null) {
+			serverLogin[0] = null;
+			serverLogin[1] = null;
+			return true;
 		}
-
-		
+		else {
+			throw new WirelessInfoException("No Login details to clear.");
+		}
 	}
 
 	private boolean setLoginDetails() throws WirelessInfoException {
@@ -603,6 +596,28 @@ public class WirelessInfo extends Activity implements LocationListener {
 			}
 		}).start();
 		return true;
+	}
+	
+	public void onClickStartGetLogin(View v) {
+		status("onClickStartGetLogin");
+		trace("TestAH: onClickStartGetLogin: Start.");
+		
+		try {
+			checkAPNSettings();
+			
+			try {
+				setLoginDetails();
+			} catch (WirelessInfoException e) {
+				status(e.getMessage());
+			}
+		} catch (WirelessInfoException e) {
+			status(e.getMessage());
+			Toast t = Toast.makeText(getApplicationContext(),e.getMessage(),Toast.LENGTH_SHORT);
+			t.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
+			t.show();
+		}
+
+		
 	}
 
 	public void onClickStartInternalFTP(View v) {
@@ -756,6 +771,9 @@ public class WirelessInfo extends Activity implements LocationListener {
 
 	private void getTestLoginDetails() throws IOException {
 		trace("WirelessInfo.getTestLoginDetails: Start.");
+		//if (serverLogin == null) {
+			//LoginDetails[] serverLogin = new LoginDetails[2];
+		//}
 		InputStream is = null;
 		ByteArrayOutputStream bos = null;
 		byte[] data = null;
