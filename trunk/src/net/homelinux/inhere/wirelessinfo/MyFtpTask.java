@@ -74,6 +74,7 @@ public class MyFtpTask extends AsyncTask<String, Integer, ThrPutStats> {
 		doneX[0] = 0;
 		Log.d("Demo", "MyFtpTask.doInBackground start, var = "+arg0[0]);
 		String ftpFileName = arg0[0];
+		int byteDownloadSize = 4096;
 		
 		//publishProgress( i );
 		
@@ -144,11 +145,11 @@ public class MyFtpTask extends AsyncTask<String, Integer, ThrPutStats> {
  	 			      File fileToWrite = new File(sdDir, "ftp-test/"+ftpFileName);
  	 			      Log.d ("Demo", "MyFtpTask.doInBackground saving file");
  	 			      java.io.FileOutputStream fos = new java.io.FileOutputStream(fileToWrite);
- 	 			      java.io.BufferedOutputStream bout = new BufferedOutputStream(fos,1024);
- 	 			      byte data[] = new byte[1024];
+ 	 			      java.io.BufferedOutputStream bout = new BufferedOutputStream(fos,byteDownloadSize);
+ 	 			      byte data[] = new byte[byteDownloadSize];
  	 			      int x = 0;
  	 			      
- 	 			      while((x=myFileStream.read(data,0,1024))>=0){
+ 	 			      while((x=myFileStream.read(data,0,byteDownloadSize))>=0){
  	 			          bout.write(data,0,x);
  	 			          doneX[0] += x;
  	 			          double perFromTotal = (((double) doneX[0] / (double) length)*100.00);
