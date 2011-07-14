@@ -6,6 +6,7 @@
       android:installLocation="preferExternal" >
     <application>
          <activity android:name=".WirelessInfo" android:label="WirelessInfo 1.2.3">
+         	
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>

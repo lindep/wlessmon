@@ -123,9 +123,7 @@ public class MyFtpTask extends AsyncTask<String, Integer, ThrPutStats> {
  	 			     }
  	 			     */
 			        
-			        long rxSByteSample = TrafficStats.getTotalRxBytes();
-			    	long txSByteSample = TrafficStats.getTotalTxBytes();
-			    	long startTime = System.currentTimeMillis();
+			        
 			    	
 			    	InputStream myFileStream = null;
 			    	try {
@@ -137,25 +135,48 @@ public class MyFtpTask extends AsyncTask<String, Integer, ThrPutStats> {
 	 			    	done = true;
  	 	 			}
  	 			     
- 	 			      inputStream = new DataInputStream(myFileStream);
- 	 			      bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
- 	 			      //save file from ftp to local directory
- 	 			      File sdDir = Environment.getExternalStorageDirectory();
- 	 			      
- 	 			      File fileToWrite = new File(sdDir, "ftp-test/"+ftpFileName);
- 	 			      Log.d ("Demo", "MyFtpTask.doInBackground saving file");
- 	 			      java.io.FileOutputStream fos = new java.io.FileOutputStream(fileToWrite);
- 	 			      java.io.BufferedOutputStream bout = new BufferedOutputStream(fos,byteDownloadSize);
- 	 			      byte data[] = new byte[byteDownloadSize];
- 	 			      int x = 0;
- 	 			      
- 	 			      while((x=myFileStream.read(data,0,byteDownloadSize))>=0){
- 	 			          bout.write(data,0,x);
- 	 			          doneX[0] += x;
- 	 			          double perFromTotal = (((double) doneX[0] / (double) length)*100.00);
- 	 			          publishProgress( (int) perFromTotal );
- 	 			          //Log.d ("Demo", "MyFtpTask.doInBackground inside while FileStream x="+x+",done="+doneX[0]+", per="+perFromTotal);
- 	 			      }
+ 	 		      Log.d ("Demo", "MyFtpTask.doInBackground before creating inputStream and bufferReader.");
+ 			      inputStream = new DataInputStream(myFileStream);
+ 			      bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+ 			      //save file from ftp to local directory
+ 			      File sdDir = Environment.getExternalStorageDirectory();
+ 			     File fileToWrite = null;
+ 			      try {
+ 			    	  fileToWrite = new File(sdDir, "ftp-test/"+ftpFileName);
+ 			    	 Log.d ("Demo", "MyFtpTask.doInBackground file sdcard good.");
+ 			      } catch ( NullPointerException e) {
+ 			    	 Log.d ("Demo", "MyFtpTask.doInBackground Disconnect ftp, file on sdcard/"+ftpFileName+" fault.");
+ 			    	con.logout();
+ 			    	con.disconnect();
+ 			    	 done = true;
+ 			      }
+ 			      
+ 			      java.io.FileOutputStream fos = new java.io.FileOutputStream(fileToWrite);
+ 			      java.io.BufferedOutputStream bout = new BufferedOutputStream(fos,byteDownloadSize);
+ 			      byte data[] = new byte[byteDownloadSize];
+ 			      
+ 			    long rxSByteSample = TrafficStats.getTotalRxBytes();
+		    	long txSByteSample = TrafficStats.getTotalTxBytes();
+		    	long startTime = System.currentTimeMillis();
+		    	Log.d ("Demo", "MyFtpTask.doInBackground before reading, set start time = "+startTime);
+		    	
+		    	int x = 0;
+ 			      
+		    	try {
+ 			      while((x=myFileStream.read(data,0,byteDownloadSize))>=0){
+ 			          bout.write(data,0,x);
+ 			          doneX[0] += x;
+ 			          double perFromTotal = (((double) doneX[0] / (double) length)*100.00);
+ 			          publishProgress( (int) perFromTotal );
+ 			          //Log.d ("Demo", "MyFtpTask.doInBackground inside while FileStream x="+x+",done="+doneX[0]+", per="+perFromTotal);
+ 			      }
+		    	} catch (IOException e) {
+		    		Log.d ("Demo", "MyFtpTask.doInBackground reading fail.");
+		    		Log.d ("Demo", e.getMessage());
+		    		con.logout();
+ 			    	con.disconnect();
+ 			    	done = true;
+		    	}
  	 			      
  	 			    long rxEByteSample = TrafficStats.getTotalRxBytes();
  		        	long txEByteSample = TrafficStats.getTotalTxBytes();
@@ -181,6 +202,7 @@ public class MyFtpTask extends AsyncTask<String, Integer, ThrPutStats> {
  	 			     if(!con.completePendingCommand()) {
  	 			    	 con.logout();
  	 			    	 con.disconnect();
+ 	 			    	 done = true;
  	 			          //System.err.println("File transfer failed.");
  	 			          Log.d("Demo", "MyFtp: File transfer failed.");
  	 			      }
@@ -190,6 +212,7 @@ public class MyFtpTask extends AsyncTask<String, Integer, ThrPutStats> {
  	 			    try {
  	 			    	con.logout();  
  	 			    	con.disconnect();  
+ 	 			    	done = true;
  	 			    } catch (IOException f) {
  	 			     // do nothing
  	 			    }
