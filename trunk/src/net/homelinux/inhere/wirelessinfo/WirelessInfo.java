@@ -31,7 +31,9 @@ import org.json.JSONObject;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.location.Criteria;
 import android.location.Location;
@@ -71,7 +73,7 @@ public class WirelessInfo extends Activity implements LocationListener {
 
 	private TelephonyManager tm;
 	MyPhoneStateListener MyListener;
-	MyPhoneStateListenerState MyListenerState;
+	int listenEvents;
 	private GsmCellLocation mobileLocation;
 	private int cid, lac, mcc, mnc, cellPadding;
 	private String networkType, SignalHeading, imsi;
@@ -119,11 +121,21 @@ public class WirelessInfo extends Activity implements LocationListener {
 		}
 
 		MyListener = new MyPhoneStateListener();
-		MyListenerState = new MyPhoneStateListenerState();
 		tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-		tm.listen(MyListener, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
-		tm.listen(MyListenerState,
-				PhoneStateListener.LISTEN_DATA_CONNECTION_STATE);
+		
+		int events = PhoneStateListener.LISTEN_SIGNAL_STRENGTH | 
+		 PhoneStateListener.LISTEN_DATA_ACTIVITY | 
+		 PhoneStateListener.LISTEN_CELL_LOCATION |
+		 PhoneStateListener.LISTEN_CALL_STATE |
+		 PhoneStateListener.LISTEN_CALL_FORWARDING_INDICATOR |
+		 PhoneStateListener.LISTEN_DATA_CONNECTION_STATE |
+		 PhoneStateListener.LISTEN_MESSAGE_WAITING_INDICATOR |
+		 PhoneStateListener.LISTEN_SERVICE_STATE;
+		
+		listenEvents = PhoneStateListener.LISTEN_SIGNAL_STRENGTHS;
+		
+		tm.listen(MyListener, listenEvents);
+
 		imsi = tm.getSubscriberId();
 
 		((TextView) findViewById(R.id.TextViewImsi)).setText("IMSI: " + imsi);
@@ -202,9 +214,7 @@ public class WirelessInfo extends Activity implements LocationListener {
 				}
 
 				((TextView) findViewById(R.id.dataType))
-						.setText("Network Type: "
-								+ TelephonyManager.NETWORK_TYPE_UMTS + ":"
-								+ tm.getDataActivity());
+						.setText("Activity Type: "+ tm.getDataActivity());
 
 				/*
 				 * Update the GUI with the current cell's info
@@ -355,7 +365,7 @@ public class WirelessInfo extends Activity implements LocationListener {
 	@Override
 	protected void onResume() {
 		super.onResume();
-		tm.listen(MyListener, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
+		tm.listen(MyListener, listenEvents);
 		locationManager.requestLocationUpdates(provider, 400, 1, this);
 	}
 
@@ -381,43 +391,51 @@ public class WirelessInfo extends Activity implements LocationListener {
 
 			((TextView) findViewById(R.id.other_txt1)).setText(SignalHeading
 					+ ": -" + ssdbm + "dBm");
-			// Toast.makeText(getApplicationContext(), "CINR = "+
-			// String.valueOf(signalStrength.getGsmSignalStrength()) +", -"+
-			// ssdbm +"dBm, "+ cdmadbm +", "+ cdmaecio+", BER ="+ber,
-			// Toast.LENGTH_SHORT).show();
+		}
+		
+		@Override
+		public void onDataActivity(int direction) {
+			String directionString = "none";
+			
+			switch(direction)
+			{
+				case TelephonyManager.DATA_ACTIVITY_IN: 	directionString = "IN"; break;
+				case TelephonyManager.DATA_ACTIVITY_OUT: 	directionString = "OUT"; break;
+				case TelephonyManager.DATA_ACTIVITY_INOUT: 	directionString = "INOUT"; break;
+				case TelephonyManager.DATA_ACTIVITY_NONE: 	directionString = "NONE"; break;
+				default:									directionString = "UNKNOWN: " + direction; break;
+			}
+			
+			//setDataDirection(info_ids[INFO_DATA_DIRECTION_INDEX],direction);
+			
+			((TextView) findViewById(R.id.dataType)).setText("Activity Type: "+ directionString);
+			
+			trace("onDataActivity " + directionString);
+			
+			super.onDataActivity(direction);
+		}
+		
+		@Override
+		public void onDataConnectionStateChanged(int state)
+		{
+			String connectionState = "Unknown";
+			
+			switch(state)
+			{
+				case TelephonyManager.DATA_CONNECTED: 		connectionState = "Connected"; break;
+				case TelephonyManager.DATA_CONNECTING: 		connectionState = "Connecting"; break;
+				case TelephonyManager.DATA_DISCONNECTED: 	connectionState = "Disconnected"; break;
+				case TelephonyManager.DATA_SUSPENDED: 		connectionState = "Suspended"; break;
+				default: 									connectionState = "Unknown: " + state; break;
+			}
+			
+			((TextView) findViewById(R.id.dataType)).setText("Activity Type: "+ connectionState);
+			
+			trace("onDataState " + connectionState);
+			
+			super.onDataConnectionStateChanged(state);
 		}
 	};/* End of private Class */
-
-	private class MyPhoneStateListenerState extends PhoneStateListener {
-		/*
-		 * Get the Signal strength from the provider, each time there is an
-		 * update
-		 */
-
-		@Override
-		public void onServiceStateChanged(ServiceState serviceState) {
-			super.onServiceStateChanged(serviceState);
-			/*
-			 * if (tm.getNetworkType() == TelephonyManager.NETWORK_TYPE_UMTS ||
-			 * tm.getNetworkType() == TelephonyManager.NETWORK_TYPE_HSDPA) {
-			 * cellPadding = 8; networkType = "UMTS"; SignalHeading = "RSSI";
-			 * 
-			 * } else { cellPadding = 4; networkType = "GSM"; SignalHeading =
-			 * "RSCP"; }
-			 * 
-			 * ((TextView) findViewById(R.id.TextView01)).setText(": CellID: " +
-			 * getCellId(cid, networkType) + ": " + cid); ((TextView)
-			 * findViewById(R.id.TextView02)).setText("LAC: " +
-			 * getPaddedInt(lac, 4)+": "+getPaddedHex(lac, 4)); ((TextView)
-			 * findViewById(R.id.TextView03)).setText("MCC: "+ getPaddedInt(mcc,
-			 * 3)+", MNC: "+ getPaddedInt(mnc, 2));
-			 */
-
-			((TextView) findViewById(R.id.dataType)).setText("Network Type: "
-					+ TelephonyManager.NETWORK_TYPE_UMTS + ":"
-					+ tm.getDataActivity());
-		}
-	};
 
 	public int getRSSI(int ss) {
 		int ssdbm;
@@ -637,12 +655,12 @@ public class WirelessInfo extends Activity implements LocationListener {
 					trace("TestAH: onClickStartFTP: No Login details, please try again");
 					status("No Login details, please try again.");
 				} else {
-					MyFtpTask ft = new MyFtpTask(this, "1MEG", serverLogin[1]);
+					MyFtpTask ft = new MyFtpTask(this, "2MEG", serverLogin[1]);
 					mCurrentFtpTask = ft;
 
 					// Start the task.
 					trace("TestAH: onClickStart: Running MyFtpTask.execute.");
-					ft.execute("1MEG");
+					ft.execute("2MEG");
 				}
 			} catch (WirelessInfoException e) {
 				status(e.getMessage());
@@ -905,6 +923,20 @@ public class WirelessInfo extends Activity implements LocationListener {
 			} catch (Exception e) {
 			}
 		}
+	}
+	
+	private String getNetworkTypeString(int type){
+		String typeString = "Unknown";
+		
+		switch(type)
+		{
+			case TelephonyManager.NETWORK_TYPE_EDGE:	typeString = "EDGE"; break;
+			case TelephonyManager.NETWORK_TYPE_GPRS:	typeString = "GPRS"; break;
+			case TelephonyManager.NETWORK_TYPE_UMTS:	typeString = "UMTS"; break;
+			default:									typeString = "UNKNOWN"; break;
+		}
+		
+		return typeString;
 	}
 
 }
