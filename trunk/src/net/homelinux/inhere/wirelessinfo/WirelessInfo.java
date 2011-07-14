@@ -332,26 +332,57 @@ public class WirelessInfo extends Activity implements LocationListener {
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
+		Intent i = new Intent(WirelessInfo.this, test.class);
 		switch (item.getItemId()) {
+		
 		case R.id.icon:
-			Toast.makeText(this, "You pressed the icon!", Toast.LENGTH_LONG)
-					.show();
+					
+			Bundle b = new Bundle();
+            b.putString("IDENT", "data_to_subactivity");
+            i.putExtras(b);
+            startActivityForResult(i, PICK_CONTACT_REQUEST);
+            
+			//Toast.makeText(this, "You pressed the icon!", Toast.LENGTH_LONG).show();
 			break;
 		case R.id.mclearlogin:
 			try {
 				clearLoginDetails();
 				status("Login details cleared.");
+				trace("click Clear login on menu");
 			} catch (WirelessInfoException e) {
-				status(e.getMessage());
+				trace(e.getMessage());
 			}
 			break;
 		case R.id.icontext:
-			Toast.makeText(this, "You pressed the icon and text!",
-					Toast.LENGTH_LONG).show();
+			//Intent it = new Intent(WirelessInfo.this, test.class);
+			startActivity(i);
+			//Toast.makeText(this, "You pressed the icon and text!",Toast.LENGTH_LONG).show();
 			break;
 		}
 		return true;
 	}
+	
+	static final int PICK_CONTACT_REQUEST = 0;
+	private static final String PUBLIC_STATIC_STRING_IDENTIFIER = null;
+	private static final String TAG = "helloListView";
+	
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data); 
+		  switch(requestCode) { 
+		    case (PICK_CONTACT_REQUEST) : { 
+		      if (resultCode == Activity.RESULT_OK) { 
+	        	  String returnData = data.getStringExtra(PUBLIC_STATIC_STRING_IDENTIFIER);
+
+	        	  //Toast.makeText(getApplicationContext(), "onActivityResult: " + returnData, Toast.LENGTH_LONG).show();
+	        	  trace("onActivityResult: from child intent = " + returnData);
+	        	} else if (resultCode == RESULT_CANCELED) {
+	        		trace("onActivityResult: ERROR");	
+	        	}
+		    }
+		    default: 
+		    	break; 
+		  }
+    }
 
 	/* Called when the application is minimized */
 	@Override
@@ -784,7 +815,7 @@ public class WirelessInfo extends Activity implements LocationListener {
 	}
 
 	public void trace(String msg) {
-		Log.d("Demo", msg);
+		Log.d("WirelessInfo", msg);
 	}
 
 	private void getTestLoginDetails() throws IOException {
