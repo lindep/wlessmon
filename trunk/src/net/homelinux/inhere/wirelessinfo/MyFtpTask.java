@@ -49,7 +49,7 @@ public class MyFtpTask extends AsyncTask<String, Integer, ThrPutStats> {
 			mPort = slogin.getPort();
 			mId = slogin.getId();
 			mPasswd = slogin.getPasswd();
-			Log.d("Demo", "MyFtpTask: Done set vars in constructor");
+			trace("MyFtpTask: Done set vars in constructor");
 	}
 	
 	@Override 
@@ -72,7 +72,8 @@ public class MyFtpTask extends AsyncTask<String, Integer, ThrPutStats> {
 		Integer[] doneX;
 		doneX = new Integer[3];
 		doneX[0] = 0;
-		Log.d("Demo", "MyFtpTask.doInBackground start, var = "+arg0[0]);
+		trace("MyFtpTask.doInBackground start, var = "+arg0[0]);
+		trace("Testing file "+mFilename);
 		String ftpFileName = arg0[0];
 		int byteDownloadSize = 4096;
 		
@@ -204,7 +205,7 @@ public class MyFtpTask extends AsyncTask<String, Integer, ThrPutStats> {
  	 			    	 con.disconnect();
  	 			    	 done = true;
  	 			          //System.err.println("File transfer failed.");
- 	 			          Log.d("Demo", "MyFtp: File transfer failed.");
+ 	 			          trace("MyFtp: File transfer failed.");
  	 			      }
  	 		    }
  	 		} catch (Exception e) {

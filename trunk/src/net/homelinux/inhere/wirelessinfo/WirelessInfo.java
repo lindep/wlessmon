@@ -85,6 +85,7 @@ public class WirelessInfo extends Activity implements LocationListener {
 	private LocationManager locationManager;
 	private String provider;
 
+	private String ftpFileName;
 	private MyFtpTask mCurrentFtpTask = null;
 
 	ThrPutStats tps = null;
@@ -335,10 +336,11 @@ public class WirelessInfo extends Activity implements LocationListener {
 		Intent i = new Intent(WirelessInfo.this, test.class);
 		switch (item.getItemId()) {
 		
-		case R.id.icon:
+		case R.id.settings:
 					
 			Bundle b = new Bundle();
             b.putString("IDENT", "data_to_subactivity");
+            b.putString("IDENT1", "more data_to_subactivity");
             i.putExtras(b);
             startActivityForResult(i, PICK_CONTACT_REQUEST);
             
@@ -354,9 +356,7 @@ public class WirelessInfo extends Activity implements LocationListener {
 			}
 			break;
 		case R.id.icontext:
-			//Intent it = new Intent(WirelessInfo.this, test.class);
-			startActivity(i);
-			//Toast.makeText(this, "You pressed the icon and text!",Toast.LENGTH_LONG).show();
+			trace("menu");
 			break;
 		}
 		return true;
@@ -366,12 +366,15 @@ public class WirelessInfo extends Activity implements LocationListener {
 	private static final String PUBLIC_STATIC_STRING_IDENTIFIER = null;
 	private static final String TAG = "helloListView";
 	
+	
+	
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data); 
 		  switch(requestCode) { 
 		    case (PICK_CONTACT_REQUEST) : { 
 		      if (resultCode == Activity.RESULT_OK) { 
 	        	  String returnData = data.getStringExtra(PUBLIC_STATIC_STRING_IDENTIFIER);
+	        	  ftpFileName = data.getStringExtra("FILE_NAME");
 
 	        	  //Toast.makeText(getApplicationContext(), "onActivityResult: " + returnData, Toast.LENGTH_LONG).show();
 	        	  trace("onActivityResult: from child intent = " + returnData);
@@ -649,7 +652,7 @@ public class WirelessInfo extends Activity implements LocationListener {
 	
 	public void onClickStartGetLogin(View v) {
 		status("onClickStartGetLogin");
-		trace("TestAH: onClickStartGetLogin: Start.");
+		trace("WirelessInfo: onClickStartGetLogin: Start.");
 		
 		try {
 			checkAPNSettings();
@@ -671,7 +674,7 @@ public class WirelessInfo extends Activity implements LocationListener {
 
 	public void onClickStartInternalFTP(View v) {
 		status("onClickStartInternalFTP");
-		trace("TestAH: onClickStartInternalFTP: Start.");
+		trace("WirelessInfo: onClickStartInternalFTP: Start.");
 		
 		try {
 			checkAPNSettings();
@@ -680,18 +683,20 @@ public class WirelessInfo extends Activity implements LocationListener {
 				setLoginDetails();
 				MyFtpTask t = mCurrentFtpTask;
 				if (t != null) {
-					trace("TestAH: onClickStartFTP: Please wait for the previous task to finish.");
+					trace("WirelessInfo: onClickStartFTP: Please wait for the previous task to finish.");
 					status("Please wait for the previous task MyFtpTask to finish.");
 				} else if (serverLogin[1] == null) {
-					trace("TestAH: onClickStartFTP: No Login details, please try again");
+					trace("WirelessInfo: onClickStartFTP: No Login details, please try again");
 					status("No Login details, please try again.");
 				} else {
+					// will test ftp file. No used in download. ftpFileName
 					MyFtpTask ft = new MyFtpTask(this, "2MEG", serverLogin[1]);
 					mCurrentFtpTask = ft;
 
 					// Start the task.
-					trace("TestAH: onClickStart: Running MyFtpTask.execute.");
+					trace("WirelessInfo: onClickStart: Running MyFtpTask.execute start.");
 					ft.execute("2MEG");
+					trace("WirelessInfo: onClickStart: Running MyFtpTask.execute done.");
 				}
 			} catch (WirelessInfoException e) {
 				status(e.getMessage());
@@ -711,23 +716,23 @@ public class WirelessInfo extends Activity implements LocationListener {
 
 	public void onClickStartFTP(View v) {
 		status("onClickStartFTP");
-		trace("TestAH: onClickStartFTP: Start.");
+		trace("WirelessInfo: onClickStartFTP: Start.");
 
 		try {
 		setLoginDetails();
 			MyFtpTask t = mCurrentFtpTask;
 			if (t != null) {
-				trace("TestAH: onClickStartFTP: Please wait for the previous task to finish.");
+				trace("WirelessInfo: onClickStartFTP: Please wait for the previous task to finish.");
 				status("Please wait for the previous task MyFtpTask to finish.");
 			} else if (serverLogin[0] == null) {
-				trace("TestAH: onClickStartFTP: No Login details, please try again");
+				trace("WirelessInfo: onClickStartFTP: No Login details, please try again");
 				status("No Login details, please try again.");
 			} else {
 				MyFtpTask ft = new MyFtpTask(this, "test.txt", serverLogin[0]);
 				mCurrentFtpTask = ft;
 
 				// Start the task.
-				trace("TestAH: onClickStart: Running MyFtpTask.execute.");
+				trace("WirelessInfo: onClickStart: Running MyFtpTask.execute.");
 				ft.execute("test.txt");
 			}
 		} catch (WirelessInfoException e) {
@@ -737,15 +742,15 @@ public class WirelessInfo extends Activity implements LocationListener {
 
 	public void onClickStopFTP(View v) {
 
-		trace("TestAH.onClickStopFTP: Stop Button.");
+		trace("WirelessInfo.onClickStopFTP: Stop Button.");
 
 		MyFtpTask t = mCurrentFtpTask;
 		if (t == null) {
-			trace("TestAH.onClickStopFTP: There is no task to disconnect.");
+			trace("WirelessInfo.onClickStopFTP: There is no task to disconnect.");
 			status("There is no task to disconnect.");
 		} else {
 			endFtpBackgroundTasks(true);
-			trace("TestAH.onClickStopFTP: disconnect executed. Check the Logs.");
+			trace("WirelessInfo.onClickStopFTP: disconnect executed. Check the Logs.");
 			status("No more updates here. Check the Log.");
 		}
 
@@ -757,7 +762,7 @@ public class WirelessInfo extends Activity implements LocationListener {
 		if (cancelled) {
 			status("Task FTP cancelled after " + moveCount.getFileSizeBytes()
 					+ " Bytes, Delta RX Bytes = " + moveCount.getRxBytes());
-			trace("TestAH.onFtpTaskCompleted: Task FTP cancelled after "
+			trace("WirelessInfo.onFtpTaskCompleted: Task FTP cancelled after "
 					+ moveCount.getFileSizeBytes()
 					+ " Bytes, Delta RX Bytes = " + moveCount.getRxBytes());
 		} else {
@@ -768,7 +773,7 @@ public class WirelessInfo extends Activity implements LocationListener {
 					+ " Bytes, Delta RX Bytes = " + moveCount.getRxBytes()
 					+ ", Delta Time = " + moveCount.getTime()
 					+ ", Throughput = " + thput + " Kb/s");
-			trace("TestAH.onFtpTaskCompleted: Task FTP ended after "
+			trace("WirelessInfo.onFtpTaskCompleted: Task FTP ended after "
 					+ moveCount.getFileSizeBytes()
 					+ " Bytes, Delta RX Bytes = " + moveCount.getRxBytes()
 					+ ", Delta Time = " + moveCount.getTime()
@@ -793,10 +798,10 @@ public class WirelessInfo extends Activity implements LocationListener {
 			// Finish cleanup by removing the reference to the task
 			if (cleanup) {
 				mCurrentFtpTask = null;
-				trace("TestAH.endFtpBackgroundTasks: cleanup. Check the Logs.");
+				trace("WirelessInfo.endFtpBackgroundTasks: cleanup. Check the Logs.");
 				status("endFtpBackgroundTasks: Interrupted and ended task.");
 			} else {
-				trace("TestAH.endFtpBackgroundTasks: Interrupted. not null.");
+				trace("WirelessInfo.endFtpBackgroundTasks: Interrupted. not null.");
 				status("endFtpBackgroundTasks: Interrupted task.");
 			}
 		}
@@ -804,8 +809,8 @@ public class WirelessInfo extends Activity implements LocationListener {
 
 	public void showFtpProgressOnScreen(int val) {
 		// trace
-		// ("TestAH: showFtpProgressOnScreen: Got progress report. "+val+"%");
-		status("TestAH.showFtpProgressOnScreen: Got progress report from FTP task. "
+		// ("WirelessInfo: showFtpProgressOnScreen: Got progress report. "+val+"%");
+		status("WirelessInfo.showFtpProgressOnScreen: Got progress report from FTP task. "
 				+ val + "%");
 	}
 
