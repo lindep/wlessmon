@@ -5,7 +5,11 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemSelectedListener;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.Spinner;
 
 public class test extends Activity {
 	
@@ -18,6 +22,14 @@ public class test extends Activity {
 		setContentView(R.layout.test);
 		
 		InputFileName = (EditText) findViewById(R.id.inputFileName);
+		
+		Spinner spinner = (Spinner) findViewById(R.id.fileSizeSpinner);
+	    ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
+	            this, R.array.fileSize_array, android.R.layout.simple_spinner_item);
+	    adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+	    spinner.setAdapter(adapter);
+	    
+	    spinner.setOnItemSelectedListener(new MyOnItemSelectedListener());
 	}
 	
 	public void onClickTest(View v) {
@@ -40,6 +52,18 @@ public class test extends Activity {
 			trace("test intent eror ."+e.getMessage());
 		}
 		trace("test intent close.");
+	}
+	
+	public class MyOnItemSelectedListener implements OnItemSelectedListener {
+
+	    public void onItemSelected(AdapterView<?> parent,
+	        View view, int pos, long id) {
+	      trace("The planet is " +parent.getItemAtPosition(pos).toString());
+	    }
+
+	    public void onNothingSelected(AdapterView parent) {
+	      // Do nothing.
+	    }
 	}
 	
 	public void trace(String msg) {

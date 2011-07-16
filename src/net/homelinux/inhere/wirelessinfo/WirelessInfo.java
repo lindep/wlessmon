@@ -111,7 +111,7 @@ public class WirelessInfo extends Activity implements LocationListener {
 
 		// Initialize the location fields
 		if (location != null) {
-			System.out.println("Provider " + provider + " has been selected.");
+			trace("Provider " + provider + " has been selected.");
 			double lat = (location.getLatitude());
 			double lng = (location.getLongitude());
 			latituteField.setText(String.valueOf(lat));
@@ -728,7 +728,7 @@ public class WirelessInfo extends Activity implements LocationListener {
 				trace("WirelessInfo: onClickStartFTP: No Login details, please try again");
 				status("No Login details, please try again.");
 			} else {
-				MyFtpTask ft = new MyFtpTask(this, "test.txt", serverLogin[0]);
+				MyFtpTask ft = new MyFtpTask(this, ftpFileName, serverLogin[0]);
 				mCurrentFtpTask = ft;
 
 				// Start the task.

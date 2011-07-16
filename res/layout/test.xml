@@ -31,5 +31,12 @@
     	android:layout_width="wrap_content"
     	android:onClick="onClickTest" 
     	android:layout_height="wrap_content"></Button>
+    	
+    <Spinner 
+        android:id="@+id/fileSizeSpinner"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:prompt="@string/filesize_prompt"
+    />
     
 </LinearLayout>
