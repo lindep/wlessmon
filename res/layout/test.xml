@@ -26,12 +26,46 @@
         	></EditText>
     </LinearLayout>
     
-    <Button android:text="Save" 
-    	android:id="@+id/button1" 
-    	android:layout_width="wrap_content"
-    	android:onClick="onClickTest" 
-    	android:layout_height="wrap_content"></Button>
+    <LinearLayout android:id="@+id/linearLayout1"
+    	android:orientation="horizontal"
+		android:gravity="left"
+    	android:layout_width="fill_parent"
+		android:layout_height="wrap_content">
+		
+    <Button android:text="Back" 
+    	android:id="@+id/backButton" 
+    	android:onClick="onClickBack"
+    	android:layout_weight="1"  
+    	android:layout_height="wrap_content"
+    	android:layout_width="wrap_content" 
+    />
+    
+    <Button android:text="Connect" 
+    	android:id="@+id/connectFtp" 
+    	android:onClick="onClickConnect"
+    	android:layout_weight="1"  
+    	android:layout_height="wrap_content"
+    	android:layout_width="wrap_content" 
+    />
+    
+    <ToggleButton android:id="@+id/ftpAction"
+		android:layout_width="wrap_content"
+		android:textOff="Connect"
+		android:textOn="Disconnect"
+		android:onClick="onClickftpAction"
+		android:layout_weight="1"
+	android:layout_height="match_parent"/>
     	
+     <Button android:text="Throughput test" 
+    	android:id="@+id/thrputTestButton" 	
+    	android:onClick="onClickThrputTest"
+    	android:layout_weight="1" 
+    	android:layout_height="wrap_content"
+    	android:layout_width="wrap_content" 
+    />
+    	
+    </LinearLayout>
+    
     <Spinner 
         android:id="@+id/fileSizeSpinner"
         android:layout_width="fill_parent"

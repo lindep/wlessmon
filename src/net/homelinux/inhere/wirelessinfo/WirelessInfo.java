@@ -337,14 +337,26 @@ public class WirelessInfo extends Activity implements LocationListener {
 		switch (item.getItemId()) {
 		
 		case R.id.settings:
-					
+			trace("Open Settings.");		
 			Bundle b = new Bundle();
             b.putString("IDENT", "data_to_subactivity");
             b.putString("IDENT1", "more data_to_subactivity");
-            i.putExtras(b);
-            startActivityForResult(i, PICK_CONTACT_REQUEST);
             
-			//Toast.makeText(this, "You pressed the icon!", Toast.LENGTH_LONG).show();
+            if (serverLogin[0] != null) {
+            	b.putBoolean("hostStatus",true);
+	            b.putString("host",serverLogin[0].getHost());
+	            b.putInt("port",serverLogin[0].getPort());
+	            b.putString("id",serverLogin[0].getId());
+	            b.putString("passwd",serverLogin[0].getPasswd());
+	            
+	            i.putExtras(b);
+	            startActivityForResult(i, SET_SETTINGS);
+	            
+            } else {
+            	b.putBoolean("hostStatus",false);
+            	Toast.makeText(this, "Please set Login Details first!", Toast.LENGTH_SHORT).show();
+            }
+	
 			break;
 		case R.id.mclearlogin:
 			try {
@@ -362,16 +374,15 @@ public class WirelessInfo extends Activity implements LocationListener {
 		return true;
 	}
 	
-	static final int PICK_CONTACT_REQUEST = 0;
+	static final int SET_SETTINGS = 0;
 	private static final String PUBLIC_STATIC_STRING_IDENTIFIER = null;
-	private static final String TAG = "helloListView";
 	
 	
 	
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data); 
 		  switch(requestCode) { 
-		    case (PICK_CONTACT_REQUEST) : { 
+		    case (SET_SETTINGS) : { 
 		      if (resultCode == Activity.RESULT_OK) { 
 	        	  String returnData = data.getStringExtra(PUBLIC_STATIC_STRING_IDENTIFIER);
 	        	  ftpFileName = data.getStringExtra("FILE_NAME");
