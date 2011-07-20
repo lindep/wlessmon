@@ -44,6 +44,7 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Parcelable;
 import android.telephony.NeighboringCellInfo;
 import android.telephony.PhoneStateListener;
 import android.telephony.ServiceState;
@@ -350,6 +351,11 @@ public class WirelessInfo extends Activity implements LocationListener {
 	            b.putString("passwd",serverLogin[0].getPasswd());
 	            
 	            i.putExtras(b);
+	            Parcelable lt = new LoginDetails(serverLogin[0].getHost(), serverLogin[0].getPort(), serverLogin[0].getId(), serverLogin[0].getPasswd());
+	            //LoginDetails ld = new LoginDetails(serverLogin[0].getHost(), serverLogin[0].getPort(), serverLogin[0].getId(), serverLogin[0].getPasswd());
+	            Parcelable[] p = new Parcelable[2];
+	            i.putExtra("serverLogin", lt);
+	            i.putExtra("arrayServerlogin", p);
 	            startActivityForResult(i, SET_SETTINGS);
 	            
             } else {

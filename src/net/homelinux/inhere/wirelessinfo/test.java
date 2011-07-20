@@ -3,6 +3,7 @@ package net.homelinux.inhere.wirelessinfo;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -21,6 +22,7 @@ public class test extends Activity {
 	private Button connectFtpButton;
 	private ToggleButton ftpActionButton;
 	LoginDetails serverLogin = null;
+	LoginDetails[] serverLoginObj = new LoginDetails[2];
 	private ThrPutTest mCurrentThrPutTask = null;
 	
 	@Override
@@ -39,6 +41,15 @@ public class test extends Activity {
 	    spinner.setAdapter(adapter);
 	    
 	    spinner.setOnItemSelectedListener(new MyOnItemSelectedListener());
+	    
+	    Intent intent = getIntent();
+	    Parcelable p = intent.getParcelableExtra("serverLogin");
+	    LoginDetails serverLoginObjTest = intent.getParcelableExtra("serverLogin");
+	    serverLoginObj = (LoginDetails[]) intent.getParcelableArrayExtra("arrayServerlogin");
+	    
+	    //LoginDetails serverLoginObj = (LoginDetails)this.getIntent().getParcelableExtra("serverLogin");
+	    
+	    trace(" "+p);
 	    
 	    Bundle b = this.getIntent().getExtras();
 		if (b.getBoolean("hostStatus")) {
