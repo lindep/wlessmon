@@ -353,10 +353,10 @@ public class WirelessInfo extends Activity implements LocationListener {
 	            i.putExtras(b);
 	            Parcelable lt = new LoginDetails(serverLogin[0].getHost(), serverLogin[0].getPort(), serverLogin[0].getId(), serverLogin[0].getPasswd());
 	            //LoginDetails ld = new LoginDetails(serverLogin[0].getHost(), serverLogin[0].getPort(), serverLogin[0].getId(), serverLogin[0].getPasswd());
-	            LoginDetails[] p = new LoginDetails[2];
-	            p = serverLogin;
+	            //LoginDetails[] p = new LoginDetails[2];
+	            //p = serverLogin;
 	            i.putExtra("serverLogin", lt);
-	            i.putExtra("arrayServerlogin", p);
+	            //i.putExtra("arrayServerlogin", p);
 	            startActivityForResult(i, SET_SETTINGS);
 	            
             } else {
