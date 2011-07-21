@@ -14,6 +14,7 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 import android.widget.ToggleButton;
+import net.homelinux.inhere.wirelessinfo.database.WirelessInfoDBAdapter;
 
 public class test extends Activity {
 	
@@ -45,7 +46,7 @@ public class test extends Activity {
 	    Intent intent = getIntent();
 	    Parcelable p = intent.getParcelableExtra("serverLogin");
 	    LoginDetails serverLoginObjTest = intent.getParcelableExtra("serverLogin");
-	    serverLoginObj = (LoginDetails[]) intent.getParcelableArrayExtra("arrayServerlogin");
+	    //serverLoginObj = (LoginDetails[]) intent.getParcelableArrayExtra("arrayServerlogin");
 	    
 	    //LoginDetails serverLoginObj = (LoginDetails)this.getIntent().getParcelableExtra("serverLogin");
 	    
