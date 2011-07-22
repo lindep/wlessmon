@@ -19,6 +19,8 @@ import java.net.MalformedURLException;
 import java.util.List;
 import java.util.StringTokenizer;
 
+import net.homelinux.inhere.wirelessinfo.database.WirelessInfoDBAdapter;
+
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -93,6 +95,8 @@ public class WirelessInfo extends Activity implements LocationListener {
 
 	String testvar;
 	LoginDetails[] serverLogin = new LoginDetails[2];
+	
+	private WirelessInfoDBAdapter dbAdapter;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -686,6 +690,8 @@ public class WirelessInfo extends Activity implements LocationListener {
 			t.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
 			t.show();
 		}
+		
+		dbHelper.open();
 
 		
 	}
