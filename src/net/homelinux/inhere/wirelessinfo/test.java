@@ -50,7 +50,6 @@ public class test extends Activity {
 	    
 	    //LoginDetails serverLoginObj = (LoginDetails)this.getIntent().getParcelableExtra("serverLogin");
 	    
-	    trace(" "+p);
 	    
 	    Bundle b = this.getIntent().getExtras();
 		if (b.getBoolean("hostStatus")) {
