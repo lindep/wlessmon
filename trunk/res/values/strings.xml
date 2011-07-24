@@ -2,6 +2,7 @@
 <resources>
     <string name="app_name">WirelessInfo</string>
     <string name="filesize_prompt">Choose a file size</string>
+    <string name="ftpHost_prompt">Select FTP Host</string>
     <string-array name="fileSize_array">
         <item>1M</item>
         <item>2M</item>

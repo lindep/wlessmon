@@ -8,7 +8,7 @@ import android.util.Log;
 public class WirelessInfoDBHelper extends SQLiteOpenHelper {
 	private static final String DATABASE_NAME = "wirelessinfodb";
 
-	private static final int DATABASE_VERSION = 1;
+	private static final int DATABASE_VERSION = 2;
 
 	// Database creation sql statement
 	private static final String DATABASE_CREATE = "create table serverLogin (_id integer primary key autoincrement, "

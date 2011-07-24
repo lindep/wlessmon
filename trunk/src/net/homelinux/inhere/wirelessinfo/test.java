@@ -1,7 +1,11 @@
 package net.homelinux.inhere.wirelessinfo;
 
+import java.util.List;
+
 import android.app.Activity;
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.SQLException;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.util.Log;
@@ -11,10 +15,12 @@ import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.SimpleCursorAdapter;
 import android.widget.Spinner;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 import net.homelinux.inhere.wirelessinfo.database.WirelessInfoDBAdapter;
+import net.homelinux.inhere.wirelessinfo.database.WirelessInfoDBHelper;
 
 public class test extends Activity {
 	
@@ -25,6 +31,9 @@ public class test extends Activity {
 	LoginDetails serverLogin = null;
 	LoginDetails[] serverLoginObj = new LoginDetails[2];
 	private ThrPutTest mCurrentThrPutTask = null;
+	
+	private WirelessInfoDBAdapter dbAdapter;
+	private Cursor cursor;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -49,6 +58,33 @@ public class test extends Activity {
 	    //serverLoginObj = (LoginDetails[]) intent.getParcelableArrayExtra("arrayServerlogin");
 	    
 	    //LoginDetails serverLoginObj = (LoginDetails)this.getIntent().getParcelableExtra("serverLogin");
+	    
+	    dbAdapter = new WirelessInfoDBAdapter(this);
+	    try {
+	    	dbAdapter.open();
+	    	trace("Opened DB");
+	    	cursor = dbAdapter.fetchAllServerInfos();
+	    	List<String> hostname = dbAdapter.selectAll();
+	    	ArrayAdapter adapter = ArrayAdapter.createFromResource(this, hostname, android.R.layout.simple_spinner_item);
+			startManagingCursor(cursor);
+			
+			String[] from = new String[] { WirelessInfoDBAdapter.KEY_HOSTNAME };
+			int[] to = new int[] { R.id.ftpHostSpinner };
+		/*
+			SimpleCursorAdapter notes = new SimpleCursorAdapter(this,
+					R.layout.trace, cursor, from, to);
+			setListAdapter(notes);
+	    	
+	    	List<String> names = this.dbAdapter.selectAll();
+	    	for (String name : names) {
+	    		trace("onClickDBTest: Found hostname = "+name);
+	    	}
+	    	*/
+	    	dbAdapter.close();
+	    } catch (SQLException e) {
+	    	trace("onClickDBTest: Fail to open db "+e.getMessage());
+	    	dbAdapter.close();
+	    }
 	    
 	    
 	    Bundle b = this.getIntent().getExtras();
@@ -115,17 +151,21 @@ public class test extends Activity {
 		
 	}
 	
-	public void onClickConnect(View v) {
-		String buttonType = (String) connectFtpButton.getText();
-		ThrPutTest t = mCurrentThrPutTask;
-		if (t != null) {
-			connectFtpButton.setText("Disconnect");
-			trace("test: onClickConnect: Still connected, disconnect first");
-		} else {
-			ThrPutTest ft = new ThrPutTest(this, "filename", serverLogin);
-			mCurrentThrPutTask = ft;
-			connectFtpButton.setText("Disconnect");
-		}
+	public void onClickDBTest(View v) {
+		
+		dbAdapter = new WirelessInfoDBAdapter(this);
+	    try {
+	    	dbAdapter.open();
+	    	trace("Opened DB");
+	    	List<String> names = this.dbAdapter.selectAll();
+	    	for (String name : names) {
+	    		trace("onClickDBTest: Found hostname = "+name);
+	    	}
+	    	dbAdapter.close();
+	    } catch (SQLException e) {
+	    	trace("onClickDBTest: Fail to open db "+e.getMessage());
+	    	dbAdapter.close();
+	    }
 	}
 	
 	public void onClickftpAction(View v) {
@@ -150,7 +190,7 @@ public class test extends Activity {
 	}
 	
 	public void trace(String msg) {
-		Log.d("WirelessInfo", msg);
+		Log.d("WirelessInfo", test.class.getName()+": "+msg);
 	}
 
 }

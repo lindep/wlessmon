@@ -37,6 +37,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.database.SQLException;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
@@ -623,6 +624,22 @@ public class WirelessInfo extends Activity implements LocationListener {
 		if (serverLogin.length > 0 && serverLogin[0] != null) {
 			serverLogin[0] = null;
 			serverLogin[1] = null;
+			
+			dbAdapter = new WirelessInfoDBAdapter(this);
+			try {
+		    	dbAdapter.open();
+		    	trace("clearLoginDetails: Opened DB");
+		    	if (dbAdapter.deleteAllServerInfo()) {
+		    		trace("clearLoginDetails: clear Info in DB");
+		    	} else {
+		    		trace("clearLoginDetails: clear Info in DB failed");
+		    		dbAdapter.close();
+		    	}
+		    } catch (SQLException e) {
+		    	trace("clearLoginDetails: Fail to open db "+e.getMessage());
+		    	dbAdapter.close();
+		    }
+		    
 			return true;
 		}
 		else {
@@ -674,7 +691,7 @@ public class WirelessInfo extends Activity implements LocationListener {
 	
 	public void onClickStartGetLogin(View v) {
 		status("onClickStartGetLogin");
-		trace("WirelessInfo: onClickStartGetLogin: Start.");
+		trace("onClickStartGetLogin: Start.");
 		
 		try {
 			checkAPNSettings();
@@ -690,10 +707,6 @@ public class WirelessInfo extends Activity implements LocationListener {
 			t.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
 			t.show();
 		}
-		
-		dbHelper.open();
-
-		
 	}
 
 	public void onClickStartInternalFTP(View v) {
@@ -844,7 +857,7 @@ public class WirelessInfo extends Activity implements LocationListener {
 	}
 
 	public void trace(String msg) {
-		Log.d("WirelessInfo", msg);
+		Log.d("WirelessInfo", test.class.getName()+": "+msg);
 	}
 
 	private void getTestLoginDetails() throws IOException {
@@ -923,8 +936,19 @@ public class WirelessInfo extends Activity implements LocationListener {
 			bos.flush();
 			data = bos.toByteArray();
 
-			trace("WirelessInfo.getTestLoginDetails: Before adding data to string.");
+			boolean dbGood = false;
+			trace("getTestLoginDetails: Before adding data to string.");
 			if (data != null) {
+				dbAdapter = new WirelessInfoDBAdapter(this);
+				try {
+			    	dbAdapter.open();
+			    	dbGood = true;
+			    	trace("getTestLoginDetails: Opened DB");
+			    } catch (SQLException e) {
+			    	trace("getTestLoginDetails: Fail to open db "+e.getMessage());
+			    	dbAdapter.close();
+			    }
+				//Open DB for saving logindetails
 				try {
 					// Parse the Json data
 					JSONArray info = new JSONObject(new String(data))
@@ -940,6 +964,13 @@ public class WirelessInfo extends Activity implements LocationListener {
 						serverLogin[i].setPort(jobj.getInt("port"));
 						serverLogin[i].setId(jobj.getString("id"));
 						serverLogin[i].setPasswd(jobj.getString("passwd"));
+						
+						dbAdapter.createServerInfo(jobj.getString("server"), jobj.getInt("port"), jobj.getString("id"), jobj.getString("passwd"));
+					}
+					
+					if (dbGood) {
+						dbAdapter.close();
+						trace("getTestLoginDetails: Closed DB");
 					}
 
 					/*
