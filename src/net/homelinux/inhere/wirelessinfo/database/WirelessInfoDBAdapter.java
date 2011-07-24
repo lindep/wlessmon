@@ -1,5 +1,8 @@
 package net.homelinux.inhere.wirelessinfo.database;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -10,7 +13,7 @@ public class WirelessInfoDBAdapter {
 	
 	// Database fields
 	public static final String KEY_ROWID = "_id";
-	public static final String KEY_HOST = "host";
+	public static final String KEY_HOSTNAME = "hostname";
 	public static final String KEY_PORT = "port";
 	public static final String KEY_LOGINID = "loginid";
 	public static final String KEY_PASSWD = "passwd";
@@ -37,8 +40,8 @@ public class WirelessInfoDBAdapter {
 	 * Create a new todo If the todo is successfully created return the new
 	 * rowId for that note, otherwise return a -1 to indicate failure.
 	 */
-	public long createServerInfo(String host, int port, String loginid, String passwd) {
-		ContentValues initialValues = createContentValues(host, port, loginid, passwd);
+	public long createServerInfo(String hostname, int port, String loginid, String passwd) {
+		ContentValues initialValues = createContentValues(hostname, port, loginid, passwd);
 
 		return database.insert(DATABASE_TABLE, null, initialValues);
 	}
@@ -46,38 +49,45 @@ public class WirelessInfoDBAdapter {
 	/**
 	 * Update the todo
 	 */
-	public boolean updateServerInfo(long rowId, String host, int port,
+	public boolean updateServerInfo(long rowId, String hostname, int port,
 			String loginid, String passwd) {
-		ContentValues updateValues = createContentValues(host, port, loginid, passwd);
+		ContentValues updateValues = createContentValues(hostname, port, loginid, passwd);
 
 		return database.update(DATABASE_TABLE, updateValues, KEY_ROWID + "="
 				+ rowId, null) > 0;
 	}
 
 	/**
-	 * Deletes todo
+	 * Deletes info
 	 */
 	public boolean deleteServerInfo(long rowId) {
 		return database.delete(DATABASE_TABLE, KEY_ROWID + "=" + rowId, null) > 0;
 	}
+	
+	/**
+	 * Deletes all info
+	 */
+	public boolean deleteAllServerInfo() {
+		return database.delete(DATABASE_TABLE, null, null) > 0;
+	}
 
 	/**
-	 * Return a Cursor over the list of all todo in the database
+	 * Return a Cursor over the list of all info in the database
 	 * 
 	 * @return Cursor over all notes
 	 */
 	public Cursor fetchAllServerInfos() {
 		return database.query(DATABASE_TABLE, new String[] { KEY_ROWID,
-				KEY_HOST, KEY_PORT, KEY_LOGINID, KEY_PASSWD }, null, null, null,
+				KEY_HOSTNAME, KEY_PORT, KEY_LOGINID, KEY_PASSWD }, null, null, null,
 				null, null);
 	}
 
 	/**
-	 * Return a Cursor positioned at the defined todo
+	 * Return a Cursor positioned at the defined info
 	 */
 	public Cursor fetchServerInfo(long rowId) throws SQLException {
 		Cursor mCursor = database.query(true, DATABASE_TABLE, new String[] {
-				KEY_ROWID, KEY_HOST, KEY_PORT, KEY_LOGINID, KEY_PASSWD },
+				KEY_ROWID, KEY_HOSTNAME, KEY_PORT, KEY_LOGINID, KEY_PASSWD },
 				KEY_ROWID + "=" + rowId, null, null, null, null, null);
 		if (mCursor != null) {
 			mCursor.moveToFirst();
@@ -85,14 +95,30 @@ public class WirelessInfoDBAdapter {
 		return mCursor;
 	}
 
-	private ContentValues createContentValues(String host, int port,
+	private ContentValues createContentValues(String hostname, int port,
 			String loginid, String passwd) {
 		ContentValues values = new ContentValues();
-		values.put(KEY_HOST, host);
+		values.put(KEY_HOSTNAME, hostname);
 		values.put(KEY_PORT, port);
 		values.put(KEY_LOGINID, loginid);
 		values.put(KEY_PASSWD, passwd);
 		return values;
 	}
+	
+	public List<String> selectAll() {
+		      List<String> list = new ArrayList<String>();
+		      Cursor cursor = this.database.query(DATABASE_TABLE, new String[] { "hostname" },
+		        null, null, null, null, "_id ASC");
+		      if (cursor.moveToFirst()) {
+		         do {
+		            list.add(cursor.getString(0));
+		         } while (cursor.moveToNext());
+		      }
+		      if (cursor != null && !cursor.isClosed()) {
+		         cursor.close();
+		      }
+		      return list;
+		   }
+
 
 }
