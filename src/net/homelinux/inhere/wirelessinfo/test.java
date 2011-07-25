@@ -3,6 +3,7 @@ package net.homelinux.inhere.wirelessinfo;
 import java.util.List;
 
 import android.app.Activity;
+import android.app.ListActivity;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.SQLException;
@@ -22,8 +23,8 @@ import android.widget.ToggleButton;
 import net.homelinux.inhere.wirelessinfo.database.WirelessInfoDBAdapter;
 import net.homelinux.inhere.wirelessinfo.database.WirelessInfoDBHelper;
 
-public class test extends Activity {
-	
+public class test extends Activity  {
+	//implements AdapterView.OnItemSelectedListener
 	String PUBLIC_STATIC_STRING_IDENTIFIER = null;
 	private EditText InputFileName;
 	private Button connectFtpButton;
@@ -64,13 +65,31 @@ public class test extends Activity {
 	    	dbAdapter.open();
 	    	trace("Opened DB");
 	    	cursor = dbAdapter.fetchAllServerInfos();
+	    	startManagingCursor(cursor);
 	    	List<String> hostname = dbAdapter.selectAll();
-	    	ArrayAdapter adapter = ArrayAdapter.createFromResource(this, hostname, android.R.layout.simple_spinner_item);
-			startManagingCursor(cursor);
+	    	//ArrayAdapter adapter = ArrayAdapter.createFromResource(this, hostname, android.R.layout.simple_spinner_item);
+			
+			
+			//return(new SimpleCursorAdapter(	a,android.R.layout.simple_list_item_1,c,new String[] {Contacts.DISPLAY_NAME	},new int[] {android.R.id.text1}));
+
+			
+			//Cursor c=a.managedQuery(Contacts.CONTENT_URI, PROJECTION, null, null, null);
 			
 			String[] from = new String[] { WirelessInfoDBAdapter.KEY_HOSTNAME };
 			int[] to = new int[] { R.id.ftpHostSpinner };
-		/*
+			
+			SimpleCursorAdapter names = new SimpleCursorAdapter(this, android.R.layout.simple_list_item_1, cursor, from, to);
+			//setListAdapter(names);
+			/*
+			Spinner spin=(Spinner)findViewById(R.id.ftpHostSpinner);
+			spin.setOnItemSelectedListener(this);
+
+			ArrayAdapter<String> aa=new ArrayAdapter<String>(this,android.R.layout.simple_spinner_item,from);
+
+			aa.setDropDownViewResource(
+							android.R.layout.simple_spinner_dropdown_item);
+			spin.setAdapter(aa);
+		
 			SimpleCursorAdapter notes = new SimpleCursorAdapter(this,
 					R.layout.trace, cursor, from, to);
 			setListAdapter(notes);
@@ -100,7 +119,16 @@ public class test extends Activity {
 			Toast.makeText(this, "Please set Login Details first!", Toast.LENGTH_SHORT).show();
 		}
 	}
+/*	
+	public void onItemSelected(AdapterView<?> parent,
+		View v, int position, long id) {
+		setListAdapter(listAdapters[position]);
+	}
 	
+	public void onNothingSelected(AdapterView<?> parent) {
+	// ignore
+	}
+*/	
 	public void onClickBack(View v) {
 		trace("test: onClickStartTest: Start.");
 		
