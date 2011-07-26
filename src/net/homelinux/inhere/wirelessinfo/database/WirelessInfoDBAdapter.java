@@ -37,7 +37,7 @@ public class WirelessInfoDBAdapter {
 	}
 
 	/**
-	 * Create a new todo If the todo is successfully created return the new
+	 * Create a new info If the info is successfully created return the new
 	 * rowId for that note, otherwise return a -1 to indicate failure.
 	 */
 	public long createServerInfo(String hostname, int port, String loginid, String passwd) {
@@ -47,7 +47,7 @@ public class WirelessInfoDBAdapter {
 	}
 
 	/**
-	 * Update the todo
+	 * Update the info
 	 */
 	public boolean updateServerInfo(long rowId, String hostname, int port,
 			String loginid, String passwd) {
@@ -80,6 +80,16 @@ public class WirelessInfoDBAdapter {
 		return database.query(DATABASE_TABLE, new String[] { KEY_ROWID,
 				KEY_HOSTNAME, KEY_PORT, KEY_LOGINID, KEY_PASSWD }, null, null, null,
 				null, null);
+	}
+	
+	public Cursor fetchServerInfoKeyNamePair() {
+		Cursor mCursor = database.query(DATABASE_TABLE, new String[] { KEY_ROWID,
+				KEY_HOSTNAME }, null, null, null,
+				null, null);
+		if (mCursor != null) {
+			mCursor.moveToFirst();
+		}
+		return mCursor;
 	}
 
 	/**

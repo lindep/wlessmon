@@ -34,6 +34,8 @@ public class test extends Activity  {
 	private ThrPutTest mCurrentThrPutTask = null;
 	
 	private WirelessInfoDBAdapter dbAdapter;
+	
+	private Spinner spinServerName;
 	private Cursor cursor;
 	
 	@Override
@@ -45,6 +47,8 @@ public class test extends Activity  {
 		
 		connectFtpButton = (Button) findViewById(R.id.connectFtp);
 		
+		spinServerName = (Spinner) findViewById(R.id.ftpHostSpinner);
+		
 		Spinner spinner = (Spinner) findViewById(R.id.fileSizeSpinner);
 	    ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
 	            this, R.array.fileSize_array, android.R.layout.simple_spinner_item);
@@ -52,6 +56,7 @@ public class test extends Activity  {
 	    spinner.setAdapter(adapter);
 	    
 	    spinner.setOnItemSelectedListener(new MyOnItemSelectedListener());
+	    
 	    
 	    Intent intent = getIntent();
 	    Parcelable p = intent.getParcelableExtra("serverLogin");
@@ -64,9 +69,12 @@ public class test extends Activity  {
 	    try {
 	    	dbAdapter.open();
 	    	trace("Opened DB");
-	    	cursor = dbAdapter.fetchAllServerInfos();
-	    	startManagingCursor(cursor);
-	    	List<String> hostname = dbAdapter.selectAll();
+	    	//Spinner s = (Spinner) findViewById(R.id.ftpHostSpinner);
+	    	fillSpinner();
+	    	spinServerName.setOnItemSelectedListener(new MyServerNameItemSelectedListener());
+	    	//cursor = dbAdapter.fetchAllServerInfos();
+	    	//startManagingCursor(cursor);
+	    	//List<String> hostname = dbAdapter.selectAll();
 	    	//ArrayAdapter adapter = ArrayAdapter.createFromResource(this, hostname, android.R.layout.simple_spinner_item);
 			
 			
@@ -75,10 +83,10 @@ public class test extends Activity  {
 			
 			//Cursor c=a.managedQuery(Contacts.CONTENT_URI, PROJECTION, null, null, null);
 			
-			String[] from = new String[] { WirelessInfoDBAdapter.KEY_HOSTNAME };
-			int[] to = new int[] { R.id.ftpHostSpinner };
+			//String[] from = new String[] { WirelessInfoDBAdapter.KEY_HOSTNAME };
+			//int[] to = new int[] { R.id.ftpHostSpinner };
 			
-			SimpleCursorAdapter names = new SimpleCursorAdapter(this, android.R.layout.simple_list_item_1, cursor, from, to);
+			//SimpleCursorAdapter names = new SimpleCursorAdapter(this, android.R.layout.simple_list_item_1, cursor, from, to);
 			//setListAdapter(names);
 			/*
 			Spinner spin=(Spinner)findViewById(R.id.ftpHostSpinner);
@@ -119,6 +127,20 @@ public class test extends Activity  {
 			Toast.makeText(this, "Please set Login Details first!", Toast.LENGTH_SHORT).show();
 		}
 	}
+	
+	private void fillSpinner() {
+		//cursor = dbAdapter.fetchAllServerInfos();
+		cursor = dbAdapter.fetchServerInfoKeyNamePair();
+    	startManagingCursor(cursor);
+    	
+    	String[] from = new String[] { WirelessInfoDBAdapter.KEY_ROWID, WirelessInfoDBAdapter.KEY_HOSTNAME };
+		int[] to = new int[] { R.id.tvDBViewRow, R.id.trace };
+		SimpleCursorAdapter adapter = new SimpleCursorAdapter(this, android.R.layout.simple_spinner_item, cursor, from, to);
+		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		//Spinner s = (Spinner) findViewById(R.id.ftpHostSpinner);
+		spinServerName.setAdapter(adapter);
+    	
+	}
 /*	
 	public void onItemSelected(AdapterView<?> parent,
 		View v, int position, long id) {
@@ -155,6 +177,16 @@ public class test extends Activity  {
 	    public void onItemSelected(AdapterView<?> parent,
 	        View view, int pos, long id) {
 	      trace("The file size = " +parent.getItemAtPosition(pos).toString());
+	    }
+	    public void onNothingSelected(AdapterView parent) {
+	      // Do nothing.
+	    }
+	}
+	
+	public class MyServerNameItemSelectedListener implements OnItemSelectedListener {
+	    public void onItemSelected(AdapterView<?> parent,
+	        View view, int pos, long id) {
+	      trace("Select server = " +parent.getItemAtPosition(pos).toString());
 	    }
 	    public void onNothingSelected(AdapterView parent) {
 	      // Do nothing.
