@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.StringTokenizer;
 
 import net.homelinux.inhere.wirelessinfo.database.WirelessInfoDBAdapter;
+import net.homelinux.inhere.wirelessinfo.verification.WirelessInfoException;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;

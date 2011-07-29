@@ -191,7 +191,7 @@ public class test extends Activity  {
 	    	
 	    	int key_rowid = cursor.getInt(cursor.getColumnIndex(WirelessInfoDBAdapter.KEY_ROWID));
 	    	String host = cursor.getString(cursor.getColumnIndex(WirelessInfoDBAdapter.KEY_HOSTNAME));
-	      trace("Select server = " +host+", id = "+id+", row_id = "+key_rowid);
+	      trace("Spinner, pos = "+pos+", server = " +host+", id = "+id+", row_id = "+key_rowid);
 	    }
 	    public void onNothingSelected(AdapterView parent) {
 	      // Do nothing.
