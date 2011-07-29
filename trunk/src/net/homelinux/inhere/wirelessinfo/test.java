@@ -133,9 +133,10 @@ public class test extends Activity  {
 		cursor = dbAdapter.fetchServerInfoKeyNamePair();
     	startManagingCursor(cursor);
     	
-    	String[] from = new String[] { WirelessInfoDBAdapter.KEY_ROWID, WirelessInfoDBAdapter.KEY_HOSTNAME };
-		int[] to = new int[] { R.id.tvDBViewRow, R.id.trace };
+    	String[] from = new String[] { WirelessInfoDBAdapter.KEY_HOSTNAME, WirelessInfoDBAdapter.KEY_ROWID };
+		int[] to = new int[] { android.R.id.text1 };
 		SimpleCursorAdapter adapter = new SimpleCursorAdapter(this, android.R.layout.simple_spinner_item, cursor, from, to);
+		//SimpleCursorAdapter adapter = new SimpleCursorAdapter(this, android.R.layout.two_line_list_item, cursor, from, to);
 		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 		//Spinner s = (Spinner) findViewById(R.id.ftpHostSpinner);
 		spinServerName.setAdapter(adapter);
@@ -186,7 +187,11 @@ public class test extends Activity  {
 	public class MyServerNameItemSelectedListener implements OnItemSelectedListener {
 	    public void onItemSelected(AdapterView<?> parent,
 	        View view, int pos, long id) {
-	      trace("Select server = " +parent.getItemAtPosition(pos).toString());
+	    	Cursor cursor = (Cursor) parent.getItemAtPosition(pos);
+	    	
+	    	int key_rowid = cursor.getInt(cursor.getColumnIndex(WirelessInfoDBAdapter.KEY_ROWID));
+	    	String host = cursor.getString(cursor.getColumnIndex(WirelessInfoDBAdapter.KEY_HOSTNAME));
+	      trace("Select server = " +host+", id = "+id+", row_id = "+key_rowid);
 	    }
 	    public void onNothingSelected(AdapterView parent) {
 	      // Do nothing.

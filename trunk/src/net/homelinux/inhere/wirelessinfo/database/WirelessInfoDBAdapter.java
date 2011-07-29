@@ -84,8 +84,7 @@ public class WirelessInfoDBAdapter {
 	
 	public Cursor fetchServerInfoKeyNamePair() {
 		Cursor mCursor = database.query(DATABASE_TABLE, new String[] { KEY_ROWID,
-				KEY_HOSTNAME }, null, null, null,
-				null, null);
+				KEY_HOSTNAME }, null, null, null, null, null);
 		if (mCursor != null) {
 			mCursor.moveToFirst();
 		}
