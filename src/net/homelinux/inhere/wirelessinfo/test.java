@@ -18,6 +18,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.SimpleCursorAdapter;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 import net.homelinux.inhere.wirelessinfo.database.WirelessInfoDBAdapter;
@@ -44,7 +45,7 @@ public class test extends Activity  {
 		setContentView(R.layout.test);
 		
 		InputFileName = (EditText) findViewById(R.id.inputFileName);
-		
+		TextView tvTrace = (TextView) findViewById(R.id.trace);
 		connectFtpButton = (Button) findViewById(R.id.connectFtp);
 		
 		spinServerName = (Spinner) findViewById(R.id.ftpHostSpinner);
@@ -69,44 +70,8 @@ public class test extends Activity  {
 	    try {
 	    	dbAdapter.open();
 	    	trace("Opened DB");
-	    	//Spinner s = (Spinner) findViewById(R.id.ftpHostSpinner);
 	    	fillSpinner();
-	    	spinServerName.setOnItemSelectedListener(new MyServerNameItemSelectedListener());
-	    	//cursor = dbAdapter.fetchAllServerInfos();
-	    	//startManagingCursor(cursor);
-	    	//List<String> hostname = dbAdapter.selectAll();
-	    	//ArrayAdapter adapter = ArrayAdapter.createFromResource(this, hostname, android.R.layout.simple_spinner_item);
-			
-			
-			//return(new SimpleCursorAdapter(	a,android.R.layout.simple_list_item_1,c,new String[] {Contacts.DISPLAY_NAME	},new int[] {android.R.id.text1}));
-
-			
-			//Cursor c=a.managedQuery(Contacts.CONTENT_URI, PROJECTION, null, null, null);
-			
-			//String[] from = new String[] { WirelessInfoDBAdapter.KEY_HOSTNAME };
-			//int[] to = new int[] { R.id.ftpHostSpinner };
-			
-			//SimpleCursorAdapter names = new SimpleCursorAdapter(this, android.R.layout.simple_list_item_1, cursor, from, to);
-			//setListAdapter(names);
-			/*
-			Spinner spin=(Spinner)findViewById(R.id.ftpHostSpinner);
-			spin.setOnItemSelectedListener(this);
-
-			ArrayAdapter<String> aa=new ArrayAdapter<String>(this,android.R.layout.simple_spinner_item,from);
-
-			aa.setDropDownViewResource(
-							android.R.layout.simple_spinner_dropdown_item);
-			spin.setAdapter(aa);
-		
-			SimpleCursorAdapter notes = new SimpleCursorAdapter(this,
-					R.layout.trace, cursor, from, to);
-			setListAdapter(notes);
-	    	
-	    	List<String> names = this.dbAdapter.selectAll();
-	    	for (String name : names) {
-	    		trace("onClickDBTest: Found hostname = "+name);
-	    	}
-	    	*/
+	    	spinServerName.setOnItemSelectedListener(new MyServerNameItemSelectedListener());	    	
 	    	dbAdapter.close();
 	    } catch (SQLException e) {
 	    	trace("onClickDBTest: Fail to open db "+e.getMessage());
