@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.StringTokenizer;
 
 import net.homelinux.inhere.wirelessinfo.database.WirelessInfoDBAdapter;
+import net.homelinux.inhere.wirelessinfo.test.MyServerNameItemSelectedListener;
 import net.homelinux.inhere.wirelessinfo.verification.WirelessInfoException;
 
 import org.apache.http.HttpEntity;
@@ -663,7 +664,27 @@ public class WirelessInfo extends Activity implements LocationListener {
 			throw new WirelessInfoException("Dir does not exist. (/sdcard/ftp-test), please create.");
 
 		}
+		
+		Cursor cursor;
+		dbAdapter = new WirelessInfoDBAdapter(this);
+	    try {
+	    	dbAdapter.open();
+	    	trace("Opened DB");
+	    	cursor = dbAdapter.fetchServerInfoKeyNamePair();
+	    	startManagingCursor(cursor);
+	    	if (cursor.getCount() > 0) {
+	    		trace("setLoginDetails: Found Login details in DB");
+	    		status("Login info good in DB, no need to get.");
+	    		dbAdapter.close();
+		    	return true;
+	    	}
+	    	dbAdapter.close();
+	    } catch (SQLException e) {
+	    	trace("onClickDBTest: Fail to open db "+e.getMessage());
+	    	dbAdapter.close();
+	    }
 
+		// Check Local variables.
 		if (serverLogin.length > 0 && serverLogin[0] != null) {
 			status("setLoginDetails: Login info good, no need to get.");
 			return true;
@@ -949,7 +970,6 @@ public class WirelessInfo extends Activity implements LocationListener {
 			    	trace("getTestLoginDetails: Fail to open db "+e.getMessage());
 			    	dbAdapter.close();
 			    }
-				//Open DB for saving logindetails
 				try {
 					// Parse the Json data
 					JSONArray info = new JSONObject(new String(data))
