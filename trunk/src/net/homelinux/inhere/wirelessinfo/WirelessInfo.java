@@ -670,11 +670,25 @@ public class WirelessInfo extends Activity implements LocationListener {
 	    try {
 	    	dbAdapter.open();
 	    	trace("Opened DB");
-	    	cursor = dbAdapter.fetchServerInfoKeyNamePair();
+	    	cursor = dbAdapter.fetchAllServerInfos();
 	    	startManagingCursor(cursor);
 	    	if (cursor.getCount() > 0) {
 	    		trace("setLoginDetails: Found Login details in DB");
 	    		status("Login info good in DB, no need to get.");
+	    		if (cursor.moveToFirst()) {
+	    			int i = 0;
+		         do {
+		            serverLogin[i] = new LoginDetails();
+					serverLogin[i].setHost(cursor.getString(1));
+					serverLogin[i].setPort(cursor.getInt(2));
+					serverLogin[i].setId(cursor.getString(3));
+					serverLogin[i].setPasswd(cursor.getString(4));
+					i = i + 1;
+		         } while (cursor.moveToNext() && i < 2);
+			      }
+			      if (cursor != null && !cursor.isClosed()) {
+			         cursor.close();
+			      }
 	    		dbAdapter.close();
 		    	return true;
 	    	}
