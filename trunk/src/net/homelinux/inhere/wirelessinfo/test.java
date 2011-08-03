@@ -22,7 +22,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 import net.homelinux.inhere.wirelessinfo.database.WirelessInfoDBAdapter;
-import net.homelinux.inhere.wirelessinfo.database.WirelessInfoDBHelper;
 
 public class test extends Activity  {
 	//implements AdapterView.OnItemSelectedListener
