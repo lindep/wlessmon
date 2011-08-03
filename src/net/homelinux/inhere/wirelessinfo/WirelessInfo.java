@@ -21,6 +21,7 @@ import java.util.StringTokenizer;
 
 import net.homelinux.inhere.wirelessinfo.database.WirelessInfoDBAdapter;
 import net.homelinux.inhere.wirelessinfo.test.MyServerNameItemSelectedListener;
+import net.homelinux.inhere.wirelessinfo.verification.VerifyService;
 import net.homelinux.inhere.wirelessinfo.verification.WirelessInfoException;
 
 import org.apache.http.HttpEntity;
@@ -99,6 +100,8 @@ public class WirelessInfo extends Activity implements LocationListener {
 	String testvar;
 	LoginDetails[] serverLogin = new LoginDetails[2];
 	
+	VerifyService verify;
+	
 	private WirelessInfoDBAdapter dbAdapter;
 
 	@Override
@@ -116,6 +119,8 @@ public class WirelessInfo extends Activity implements LocationListener {
 		Criteria criteria = new Criteria();
 		provider = locationManager.getBestProvider(criteria, false);
 		Location location = locationManager.getLastKnownLocation(provider);
+		
+		verify = new VerifyService(this);
 
 		// Initialize the location fields
 		if (location != null) {
@@ -345,7 +350,15 @@ public class WirelessInfo extends Activity implements LocationListener {
 		switch (item.getItemId()) {
 		
 		case R.id.settings:
-			trace("Open Settings.");		
+			trace("Open Settings.");
+			
+			try {
+				verify.serverInfo();
+				trace("menuSettings: Found sertver Info in DB");
+			} catch (WirelessInfoException e) {
+				trace("menuSettings: "+e.getMessage());
+			}
+			
 			Bundle b = new Bundle();
             b.putString("IDENT", "data_to_subactivity");
             b.putString("IDENT1", "more data_to_subactivity");
@@ -663,6 +676,13 @@ public class WirelessInfo extends Activity implements LocationListener {
 
 			throw new WirelessInfoException("Dir does not exist. (/sdcard/ftp-test), please create.");
 
+		}
+		
+		
+		try {
+			verify.serverInfo();
+		} catch (WirelessInfoException e) {
+			trace("setLoginDetails: "+e.getMessage());
 		}
 		
 		Cursor cursor;
