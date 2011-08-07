@@ -124,7 +124,7 @@ public class WirelessInfo extends Activity implements LocationListener {
 
 		// Initialize the location fields
 		if (location != null) {
-			trace("Provider " + provider + " has been selected.");
+			trace("onCreate: Provider " + provider + " has been selected.");
 			double lat = (location.getLatitude());
 			double lng = (location.getLongitude());
 			latituteField.setText(String.valueOf(lat));
@@ -350,13 +350,13 @@ public class WirelessInfo extends Activity implements LocationListener {
 		switch (item.getItemId()) {
 		
 		case R.id.settings:
-			trace("Open Settings.");
+			trace("onOptionsItemSelected: Open Settings.");
 			
 			try {
 				verify.serverInfo();
-				trace("menuSettings: Found sertver Info in DB");
+				trace("onOptionsItemSelected: Found server Info in DB");
 			} catch (WirelessInfoException e) {
-				trace("menuSettings: "+e.getMessage());
+				trace("onOptionsItemSelected: "+e.getMessage());
 			}
 			
 			Bundle b = new Bundle();
@@ -389,13 +389,13 @@ public class WirelessInfo extends Activity implements LocationListener {
 			try {
 				clearLoginDetails();
 				status("Login details cleared.");
-				trace("click Clear login on menu");
+				trace("onOptionsItemSelected: click Clear login on menu");
 			} catch (WirelessInfoException e) {
-				trace(e.getMessage());
+				trace("onOptionsItemSelected: "+e.getMessage());
 			}
 			break;
 		case R.id.icontext:
-			trace("menu");
+			trace("onOptionsItemSelected: menu");
 			break;
 		}
 		return true;
@@ -592,7 +592,7 @@ public class WirelessInfo extends Activity implements LocationListener {
 	
 	private boolean checkAPNSettings() throws WirelessInfoException {
 		status("checkAPNSettings");
-		trace("WirelessInfo: checkAPNSettings: Start.");
+		trace("checkAPNSettings: Start.");
 		
 		Cursor mCursor = getContentResolver().query(
 				Uri.parse("content://telephony/carriers"),
@@ -681,42 +681,43 @@ public class WirelessInfo extends Activity implements LocationListener {
 		
 		try {
 			verify.serverInfo();
+			// If data exsits in DB set local vars.
+			Cursor cursor;
+			dbAdapter = new WirelessInfoDBAdapter(this);
+		    try {
+		    	dbAdapter.open();
+		    	trace("setLoginDetails: Opened DB");
+		    	cursor = dbAdapter.fetchAllServerInfos();
+		    	startManagingCursor(cursor);
+		    	if (cursor.getCount() > 0) {
+		    		trace("setLoginDetails: Found Login details in DB");
+		    		status("Login info good in DB, no need to get.");
+		    		if (cursor.moveToFirst()) {
+		    			int i = 0;
+			         do {
+			            serverLogin[i] = new LoginDetails();
+						serverLogin[i].setHost(cursor.getString(1));
+						serverLogin[i].setPort(cursor.getInt(2));
+						serverLogin[i].setId(cursor.getString(3));
+						serverLogin[i].setPasswd(cursor.getString(4));
+						i = i + 1;
+			         } while (cursor.moveToNext() && i < 2);
+				      }
+				      if (cursor != null && !cursor.isClosed()) {
+				         cursor.close();
+				      }
+		    		dbAdapter.close();
+			    	return true;
+		    	}
+		    	dbAdapter.close();
+		    } catch (SQLException e) {
+		    	trace("setLoginDetails: Fail to open db "+e.getMessage());
+		    	dbAdapter.close();
+		    }
+	    
 		} catch (WirelessInfoException e) {
 			trace("setLoginDetails: "+e.getMessage());
 		}
-		
-		Cursor cursor;
-		dbAdapter = new WirelessInfoDBAdapter(this);
-	    try {
-	    	dbAdapter.open();
-	    	trace("Opened DB");
-	    	cursor = dbAdapter.fetchAllServerInfos();
-	    	startManagingCursor(cursor);
-	    	if (cursor.getCount() > 0) {
-	    		trace("setLoginDetails: Found Login details in DB");
-	    		status("Login info good in DB, no need to get.");
-	    		if (cursor.moveToFirst()) {
-	    			int i = 0;
-		         do {
-		            serverLogin[i] = new LoginDetails();
-					serverLogin[i].setHost(cursor.getString(1));
-					serverLogin[i].setPort(cursor.getInt(2));
-					serverLogin[i].setId(cursor.getString(3));
-					serverLogin[i].setPasswd(cursor.getString(4));
-					i = i + 1;
-		         } while (cursor.moveToNext() && i < 2);
-			      }
-			      if (cursor != null && !cursor.isClosed()) {
-			         cursor.close();
-			      }
-	    		dbAdapter.close();
-		    	return true;
-	    	}
-	    	dbAdapter.close();
-	    } catch (SQLException e) {
-	    	trace("onClickDBTest: Fail to open db "+e.getMessage());
-	    	dbAdapter.close();
-	    }
 
 		// Check Local variables.
 		if (serverLogin.length > 0 && serverLogin[0] != null) {
@@ -767,7 +768,7 @@ public class WirelessInfo extends Activity implements LocationListener {
 
 	public void onClickStartInternalFTP(View v) {
 		status("onClickStartInternalFTP");
-		trace("WirelessInfo: onClickStartInternalFTP: Start.");
+		trace("onClickStartInternalFTP: Start.");
 		
 		try {
 			checkAPNSettings();
@@ -776,10 +777,10 @@ public class WirelessInfo extends Activity implements LocationListener {
 				setLoginDetails();
 				MyFtpTask t = mCurrentFtpTask;
 				if (t != null) {
-					trace("WirelessInfo: onClickStartFTP: Please wait for the previous task to finish.");
+					trace("onClickStartInternalFTP: Please wait for the previous task to finish.");
 					status("Please wait for the previous task MyFtpTask to finish.");
 				} else if (serverLogin[1] == null) {
-					trace("WirelessInfo: onClickStartFTP: No Login details, please try again");
+					trace("onClickStartInternalFTP: No Login details, please try again");
 					status("No Login details, please try again.");
 				} else {
 					// will test ftp file. No used in download. ftpFileName
@@ -787,9 +788,9 @@ public class WirelessInfo extends Activity implements LocationListener {
 					mCurrentFtpTask = ft;
 
 					// Start the task.
-					trace("WirelessInfo: onClickStart: Running MyFtpTask.execute start.");
+					trace("onClickStartInternalFTP: Running MyFtpTask.execute start.");
 					ft.execute("2MEG");
-					trace("WirelessInfo: onClickStart: Running MyFtpTask.execute done.");
+					trace("onClickStartInternalFTP: Running MyFtpTask.execute done.");
 				}
 			} catch (WirelessInfoException e) {
 				status(e.getMessage());
@@ -809,23 +810,23 @@ public class WirelessInfo extends Activity implements LocationListener {
 
 	public void onClickStartFTP(View v) {
 		status("onClickStartFTP");
-		trace("WirelessInfo: onClickStartFTP: Start.");
+		trace("onClickStartFTP: Start.");
 
 		try {
 		setLoginDetails();
 			MyFtpTask t = mCurrentFtpTask;
 			if (t != null) {
-				trace("WirelessInfo: onClickStartFTP: Please wait for the previous task to finish.");
+				trace("onClickStartFTP: Please wait for the previous task to finish.");
 				status("Please wait for the previous task MyFtpTask to finish.");
 			} else if (serverLogin[0] == null) {
-				trace("WirelessInfo: onClickStartFTP: No Login details, please try again");
+				trace("onClickStartFTP: No Login details, please try again");
 				status("No Login details, please try again.");
 			} else {
 				MyFtpTask ft = new MyFtpTask(this, ftpFileName, serverLogin[0]);
 				mCurrentFtpTask = ft;
 
 				// Start the task.
-				trace("WirelessInfo: onClickStart: Running MyFtpTask.execute.");
+				trace("onClickStart: Running MyFtpTask.execute.");
 				ft.execute("test.txt");
 			}
 		} catch (WirelessInfoException e) {
@@ -835,15 +836,15 @@ public class WirelessInfo extends Activity implements LocationListener {
 
 	public void onClickStopFTP(View v) {
 
-		trace("WirelessInfo.onClickStopFTP: Stop Button.");
+		trace("onClickStopFTP: Stop Button.");
 
 		MyFtpTask t = mCurrentFtpTask;
 		if (t == null) {
-			trace("WirelessInfo.onClickStopFTP: There is no task to disconnect.");
+			trace("onClickStopFTP: There is no task to disconnect.");
 			status("There is no task to disconnect.");
 		} else {
 			endFtpBackgroundTasks(true);
-			trace("WirelessInfo.onClickStopFTP: disconnect executed. Check the Logs.");
+			trace("onClickStopFTP: disconnect executed. Check the Logs.");
 			status("No more updates here. Check the Log.");
 		}
 
@@ -855,7 +856,7 @@ public class WirelessInfo extends Activity implements LocationListener {
 		if (cancelled) {
 			status("Task FTP cancelled after " + moveCount.getFileSizeBytes()
 					+ " Bytes, Delta RX Bytes = " + moveCount.getRxBytes());
-			trace("WirelessInfo.onFtpTaskCompleted: Task FTP cancelled after "
+			trace("onFtpTaskCompleted: Task FTP cancelled after "
 					+ moveCount.getFileSizeBytes()
 					+ " Bytes, Delta RX Bytes = " + moveCount.getRxBytes());
 		} else {
@@ -866,7 +867,7 @@ public class WirelessInfo extends Activity implements LocationListener {
 					+ " Bytes, Delta RX Bytes = " + moveCount.getRxBytes()
 					+ ", Delta Time = " + moveCount.getTime()
 					+ ", Throughput = " + thput + " Kb/s");
-			trace("WirelessInfo.onFtpTaskCompleted: Task FTP ended after "
+			trace("onFtpTaskCompleted: Task FTP ended after "
 					+ moveCount.getFileSizeBytes()
 					+ " Bytes, Delta RX Bytes = " + moveCount.getRxBytes()
 					+ ", Delta Time = " + moveCount.getTime()
@@ -891,10 +892,10 @@ public class WirelessInfo extends Activity implements LocationListener {
 			// Finish cleanup by removing the reference to the task
 			if (cleanup) {
 				mCurrentFtpTask = null;
-				trace("WirelessInfo.endFtpBackgroundTasks: cleanup. Check the Logs.");
+				trace("endFtpBackgroundTasks: cleanup. Check the Logs.");
 				status("endFtpBackgroundTasks: Interrupted and ended task.");
 			} else {
-				trace("WirelessInfo.endFtpBackgroundTasks: Interrupted. not null.");
+				trace("endFtpBackgroundTasks: Interrupted. not null.");
 				status("endFtpBackgroundTasks: Interrupted task.");
 			}
 		}
@@ -907,17 +908,8 @@ public class WirelessInfo extends Activity implements LocationListener {
 				+ val + "%");
 	}
 
-	public void status(String message) {
-		TextView tv = (TextView) findViewById(R.id.textStatus);
-		tv.setText(message);
-	}
-
-	public void trace(String msg) {
-		Log.d("WirelessInfo", test.class.getName()+": "+msg);
-	}
-
 	private void getTestLoginDetails() throws IOException {
-		trace("WirelessInfo.getTestLoginDetails: Start.");
+		trace("getTestLoginDetails: Start.");
 		//if (serverLogin == null) {
 			//LoginDetails[] serverLogin = new LoginDetails[2];
 		//}
@@ -976,7 +968,7 @@ public class WirelessInfo extends Activity implements LocationListener {
 					throw new IOException("HTTP response code: " + status);
 				}
 			}
-			trace("WirelessInfo.getTestLoginDetails: After http connection.");
+			trace("getTestLoginDetails: After http connection, getting login details from web.");
 
 			// The response was ok (HTTP_OK) so lets read the data
 			HttpEntity entity = response.getEntity();
@@ -992,8 +984,8 @@ public class WirelessInfo extends Activity implements LocationListener {
 			bos.flush();
 			data = bos.toByteArray();
 
+			trace("getTestLoginDetails: Finished adding byteStream to local var.");
 			boolean dbGood = false;
-			trace("getTestLoginDetails: Before adding data to string.");
 			if (data != null) {
 				dbAdapter = new WirelessInfoDBAdapter(this);
 				try {
@@ -1006,8 +998,7 @@ public class WirelessInfo extends Activity implements LocationListener {
 			    }
 				try {
 					// Parse the Json data
-					JSONArray info = new JSONObject(new String(data))
-							.getJSONArray("info");
+					JSONArray info = new JSONObject(new String(data)).getJSONArray("info");
 					// trace
 					// ("WirelessInfo.getTestLoginDetails: After Json. "+position.get("accuracy"));*/
 					int numVals = info.length();
@@ -1020,6 +1011,7 @@ public class WirelessInfo extends Activity implements LocationListener {
 						serverLogin[i].setId(jobj.getString("id"));
 						serverLogin[i].setPasswd(jobj.getString("passwd"));
 						
+						trace("getTestLoginDetails: Adding new server ("+jobj.getString("server")+") info to DB and local var (ServerInfo)");
 						dbAdapter.createServerInfo(jobj.getString("server"), jobj.getInt("port"), jobj.getString("id"), jobj.getString("passwd"));
 					}
 					
@@ -1083,6 +1075,15 @@ public class WirelessInfo extends Activity implements LocationListener {
 		}
 		
 		return typeString;
+	}
+	
+	public void status(String message) {
+		TextView tv = (TextView) findViewById(R.id.textStatus);
+		tv.setText(message);
+	}
+
+	public void trace(String msg) {
+		Log.d("WirelessInfo", WirelessInfo.class.getName()+": "+msg);
 	}
 
 }
