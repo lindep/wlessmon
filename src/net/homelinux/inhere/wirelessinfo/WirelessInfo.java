@@ -404,8 +404,6 @@ public class WirelessInfo extends Activity implements LocationListener {
 	static final int SET_SETTINGS = 0;
 	private static final String PUBLIC_STATIC_STRING_IDENTIFIER = null;
 	
-	
-	
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data); 
 		  switch(requestCode) { 
