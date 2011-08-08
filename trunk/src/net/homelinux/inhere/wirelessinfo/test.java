@@ -73,7 +73,7 @@ public class test extends Activity  {
 	    	spinServerName.setOnItemSelectedListener(new MyServerNameItemSelectedListener());	    	
 	    	dbAdapter.close();
 	    } catch (SQLException e) {
-	    	trace("onClickDBTest: Fail to open db "+e.getMessage());
+	    	trace("onCreate: Fail to open db "+e.getMessage());
 	    	dbAdapter.close();
 	    }
 	    
@@ -86,7 +86,7 @@ public class test extends Activity  {
 	        serverLogin.setId(b.getString("id"));
 	        serverLogin.setPasswd(b.getString("passwd"));
         
-	        trace("WirelessInfo: onClickThrputTest: End. Got server to test = "+serverLogin.getHost());
+	        trace("onCreate: End. Got server to test = "+serverLogin.getHost());
 		} else {
 			Toast.makeText(this, "Please set Login Details first!", Toast.LENGTH_SHORT).show();
 		}
@@ -117,12 +117,12 @@ public class test extends Activity  {
 	}
 */	
 	public void onClickBack(View v) {
-		trace("test: onClickStartTest: Start.");
+		trace("onClickBack: Start.");
 		
 		Bundle b = this.getIntent().getExtras();
         String s = b.getString("IDENT");
         String s1 = b.getString("IDENT1");
-        trace("From parent intent = "+s+", second string = "+s1);
+        trace("onClickBack: From parent intent = "+s+", second string = "+s1);
         
         String FileName = InputFileName.getText().toString();
 		
@@ -130,12 +130,13 @@ public class test extends Activity  {
 			Intent resultIntent = new Intent(getApplicationContext(),test.class);
 			resultIntent.putExtra(PUBLIC_STATIC_STRING_IDENTIFIER, "data_to_activity");
 			resultIntent.putExtra("FILE_NAME", FileName);
-			setResult(Activity.RESULT_OK, resultIntent);				
+			setResult(Activity.RESULT_OK, resultIntent);
+			trace("onClickBack: before running finish(), sending back to whoever launched this.");
 			finish();
 		}catch (Exception e){
-			trace("test intent eror ."+e.getMessage());
+			trace("onClickBack: intent eror ."+e.getMessage());
 		}
-		trace("test intent close.");
+		trace("onClickBack: activity closed.");
 	}
 	
 	public class MyOnItemSelectedListener implements OnItemSelectedListener {
@@ -173,7 +174,7 @@ public class test extends Activity  {
 	        serverLogin.setId(b.getString("id"));
 	        serverLogin.setPasswd(b.getString("passwd"));
         
-	        trace("WirelessInfo: onClickThrputTest: End. Got server to test = "+serverLogin.getHost());
+	        trace("onClickThrputTest: End. Got server to test = "+serverLogin.getHost());
 		} else {
 			Toast.makeText(this, "Please set Login Details first!", Toast.LENGTH_SHORT).show();
 		}
@@ -202,7 +203,7 @@ public class test extends Activity  {
 
 		ThrPutTest t = mCurrentThrPutTask;
 		if (t != null) {
-			trace("test: onClickConnect: Still connected, disconnect first");
+			trace("onClickConnect: Still connected, disconnect first");
 		} else {
 			ThrPutTest ft = new ThrPutTest(this, "filename", serverLogin);
 			mCurrentThrPutTask = ft;
@@ -210,10 +211,10 @@ public class test extends Activity  {
 		
 		// Connect to FTP server 
 		if (ftpActionButton.isChecked()) {
-			trace("test: onClickftpAction: ToggelButton isChecked, will connect.");
+			trace("onClickftpAction: ToggelButton isChecked, will connect.");
 			mCurrentThrPutTask.mConnect();
 		} else if (mCurrentThrPutTask != null ){
-			trace("test: onClickftpAction: Will disconnect.");
+			trace("onClickftpAction: Will disconnect.");
 			mCurrentThrPutTask.mDisconnect();
 		}
 	}
