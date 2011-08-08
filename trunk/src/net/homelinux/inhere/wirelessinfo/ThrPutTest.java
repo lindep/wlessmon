@@ -51,7 +51,7 @@ public class ThrPutTest extends AsyncTask<String, Integer, ThrPutStats> {
 			mId = slogin.getId();
 			mPasswd = slogin.getPasswd();
 
-			trace("MyFtpTask: Done set vars in constructor");
+			trace("ThrPutTest: Done set vars in constructor");
 	}
 	
 	@Override 
@@ -99,15 +99,15 @@ public class ThrPutTest extends AsyncTask<String, Integer, ThrPutStats> {
  	 		        try {
  	 		        	remoteFiles = con.listFiles(ftpFileName);
  	 		        } catch (IOException f) {
- 	 		        	trace("MyFtpTask.doInBackground IOException: "+f.getMessage());
+ 	 		        	trace("doInBackground IOException: "+f.getMessage());
  	 		        	con.logout();
 	 			    	con.disconnect();
 	 			    	done = true;
  	 	 			}
- 	 		        trace("MyFtpTask.doInBackground File name = "+remoteFiles[0].getName( ));
+ 	 		        trace("doInBackground File name = "+remoteFiles[0].getName( ));
  	 		        long length = remoteFiles[0].getSize( );
 			        String readableLength = FileUtils.byteCountToDisplaySize( length );
-			        trace("MyFtpTask.doInBackground File size = "+readableLength);
+			        trace("doInBackground File size = "+readableLength);
  	 		        /*
  	 		        String remoteDir = "/";
  	 			     //FTPFile[] remoteFiles = con.listFiles( remoteDir );
@@ -253,14 +253,14 @@ public class ThrPutTest extends AsyncTask<String, Integer, ThrPutStats> {
     }
 	
 	public long getFileLenght() {
-		trace("MyFtp: inside");
+		trace("getFileLenght: inside");
 		return FileLenght;
 	}
 
 	public void disconnect () {
         if (mActivity != null) {
            mActivity = null;
-           trace("MyFtpTask has successfully disconnected from the activity.");
+           trace("disconnect: task has successfully disconnected from the activity.");
         }
     }
 	
@@ -272,16 +272,16 @@ public class ThrPutTest extends AsyncTask<String, Integer, ThrPutStats> {
 	 		    	ftpConnection.enterRemotePassiveMode();
 	 		    	ftpConnection.enterLocalActiveMode(); // important!
 	 		    	ftpConnection.setFileType(FTP.BINARY_FILE_TYPE);
-	 		        trace("ThrPutTest.mConnect: Connect to FTP server successful");
+	 		        trace("mConnect: Connect to FTP server successful");
 	 		    }
 		} catch (Exception e) {
 			   if (ftpConnection.isConnected()) {
 	 			    try {
 	 			    	ftpConnection.logout();  
 	 			    	ftpConnection.disconnect(); 
-	 			    	trace("ThrPutTest.mConnect: Connect to FTP server fail, trying logout");
+	 			    	trace("mConnect: Connect to FTP server fail, trying logout");
 	 			    } catch (IOException f) {
-	 			    	trace("ThrPutTest.mConnect: Connect to FTP server fail "+f.getMessage());
+	 			    	trace("mConnect: Connect to FTP server fail "+f.getMessage());
 	 			    }
 	 			}
 	 	}
@@ -292,13 +292,13 @@ public class ThrPutTest extends AsyncTask<String, Integer, ThrPutStats> {
 		try {
 		    	ftpConnection.logout();  
 		    	ftpConnection.disconnect();
-		    	trace("ThrPutTest.mConnect: Disconnect from FTP server");
+		    	trace("mConnect: Disconnect from FTP server");
 		    } catch (IOException f) {
-		    	trace("ThrPutTest.mConnect: Logout fail = "+f.getMessage());
+		    	trace("mConnect: Logout fail = "+f.getMessage());
 		    }
 	}
 	
 	public void trace(String msg) {
-		Log.d("WirelessInfo", msg);
+		Log.d("WirelessInfo", MyFtpTask.class.getName()+": "+msg);
 	}
 }

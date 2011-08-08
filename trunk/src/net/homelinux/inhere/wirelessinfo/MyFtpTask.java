@@ -72,7 +72,7 @@ public class MyFtpTask extends AsyncTask<String, Integer, ThrPutStats> {
 		Integer[] doneX;
 		doneX = new Integer[3];
 		doneX[0] = 0;
-		trace("MyFtpTask.doInBackground start, var = "+arg0[0]);
+		trace("doInBackground start, var = "+arg0[0]);
 		trace("Testing file "+mFilename);
 		String ftpFileName = arg0[0];
 		int byteDownloadSize = 4096;
@@ -92,21 +92,21 @@ public class MyFtpTask extends AsyncTask<String, Integer, ThrPutStats> {
  	 		    	con.enterRemotePassiveMode();
  	 		    	con.enterLocalActiveMode(); // important!
  	 		        con.setFileType(FTP.BINARY_FILE_TYPE);
- 	 		        trace("MyFtpTask.doInBackground Connect to FTP server successful");
+ 	 		        trace("doInBackground Connect to FTP server successful");
  	 		        //FTPFile[] remoteFiles = con.listFiles("test.txt");
  	 		        FTPFile[] remoteFiles = null;
  	 		        try {
  	 		        	remoteFiles = con.listFiles(ftpFileName);
  	 		        } catch (IOException f) {
- 	 		        	trace("MyFtpTask.doInBackground IOException: "+f.getMessage());
+ 	 		        	trace("doInBackground IOException: "+f.getMessage());
  	 		        	con.logout();
 	 			    	con.disconnect();
 	 			    	done = true;
  	 	 			}
- 	 		        trace("MyFtpTask.doInBackground File name = "+remoteFiles[0].getName( ));
+ 	 		        trace("doInBackground File name = "+remoteFiles[0].getName( ));
  	 		        long length = remoteFiles[0].getSize( );
 			        String readableLength = FileUtils.byteCountToDisplaySize( length );
-			        trace("MyFtpTask.doInBackground File size = "+readableLength);
+			        trace("doInBackground File size = "+readableLength);
  	 		        /*
  	 		        String remoteDir = "/";
  	 			     //FTPFile[] remoteFiles = con.listFiles( remoteDir );
@@ -130,13 +130,13 @@ public class MyFtpTask extends AsyncTask<String, Integer, ThrPutStats> {
 			    	try {
 			    		myFileStream = con.retrieveFileStream(ftpFileName);
  	 		        } catch (IOException f) {
- 	 		        	trace("MyFtpTask.doInBackground IOException: "+f.getMessage());
+ 	 		        	trace("doInBackground IOException: "+f.getMessage());
  	 		        	con.logout();
 	 			    	con.disconnect();
 	 			    	done = true;
  	 	 			}
  	 			     
- 	 		      trace("MyFtpTask.doInBackground before creating inputStream and bufferReader.");
+ 	 		      trace("doInBackground before creating inputStream and bufferReader.");
  			      inputStream = new DataInputStream(myFileStream);
  			      bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
  			      //save file from ftp to local directory
@@ -144,9 +144,9 @@ public class MyFtpTask extends AsyncTask<String, Integer, ThrPutStats> {
  			     File fileToWrite = null;
  			      try {
  			    	  fileToWrite = new File(sdDir, "ftp-test/"+ftpFileName);
- 			    	 trace("MyFtpTask.doInBackground file sdcard good.");
+ 			    	 trace("doInBackground file sdcard good.");
  			      } catch ( NullPointerException e) {
- 			    	 trace("MyFtpTask.doInBackground Disconnect ftp, file on sdcard/"+ftpFileName+" fault.");
+ 			    	 trace("doInBackground Disconnect ftp, file on sdcard/"+ftpFileName+" fault.");
  			    	con.logout();
  			    	con.disconnect();
  			    	 done = true;
@@ -159,7 +159,7 @@ public class MyFtpTask extends AsyncTask<String, Integer, ThrPutStats> {
  			    long rxSByteSample = TrafficStats.getTotalRxBytes();
 		    	long txSByteSample = TrafficStats.getTotalTxBytes();
 		    	long startTime = System.currentTimeMillis();
-		    	trace("MyFtpTask.doInBackground before reading, set start time = "+startTime);
+		    	trace("doInBackground before reading, set start time = "+startTime);
 		    	
 		    	int x = 0;
  			      
@@ -172,7 +172,7 @@ public class MyFtpTask extends AsyncTask<String, Integer, ThrPutStats> {
  			          //trace("MyFtpTask.doInBackground inside while FileStream x="+x+",done="+doneX[0]+", per="+perFromTotal);
  			      }
 		    	} catch (IOException e) {
-		    		trace("MyFtpTask.doInBackground reading fail.");
+		    		trace("doInBackground reading fail.");
 		    		trace(e.getMessage());
 		    		con.logout();
  			    	con.disconnect();
@@ -186,13 +186,13 @@ public class MyFtpTask extends AsyncTask<String, Integer, ThrPutStats> {
  		        	long endTime = System.currentTimeMillis();
  		        	double deltaTime = ((double) endTime - (double) startTime)/1000.00;
  		        	double rxStatsKb = (double)(rxDByteSample*8)/1024.00;
- 		        	trace("MyFtpTask.doInBackground Delta time = "+deltaTime+" s, starttime = "+startTime+", endtime = "+endTime);
+ 		        	trace("doInBackground Delta time = "+deltaTime+" s, starttime = "+startTime+", endtime = "+endTime);
  		        	
  		        	doneX[1] = (int) rxDByteSample;
  		        	doneX[2] = (int) deltaTime;
  		        	readableLength = FileUtils.byteCountToDisplaySize( (long) (rxDByteSample/deltaTime) );
- 		        	trace("MyFtpTask.doInBackground Thrput = "+rxStatsKb/deltaTime+" Kb/s");
- 		        	trace("MyFtpTask.doInBackground Thrput = "+readableLength+"/s");
+ 		        	trace("doInBackground Thrput = "+rxStatsKb/deltaTime+" Kb/s");
+ 		        	trace("doInBackground Thrput = "+readableLength+"/s");
  		        	//((TextView) findViewById(R.id.txtWebNetStats)).setText("Delta time = "+deltaTime+" s, Thrput = "+rxStatsMb/updateDelta+" Mb/s, Delta Rx/Tx Bytes = "+(rxDByteSample*8)/1024+" kb/"+txDByteSample+" Bytes");
  		        	
  		        	tps = new ThrPutStats(length, deltaTime, rxDByteSample);
@@ -264,6 +264,6 @@ public class MyFtpTask extends AsyncTask<String, Integer, ThrPutStats> {
     }
 	
 	public void trace(String msg) {
-		Log.d("WirelessInfo", msg);
+		Log.d("WirelessInfo", MyFtpTask.class.getName()+": "+msg);
 	}
 }
