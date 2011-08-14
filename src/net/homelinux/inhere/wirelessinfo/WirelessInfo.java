@@ -811,7 +811,7 @@ public class WirelessInfo extends Activity implements LocationListener {
 		trace("onClickStartFTP: Start.");
 
 		try {
-		setLoginDetails();
+			setLoginDetails();
 			MyFtpTask t = mCurrentFtpTask;
 			if (t != null) {
 				trace("onClickStartFTP: Please wait for the previous task to finish.");
@@ -902,8 +902,7 @@ public class WirelessInfo extends Activity implements LocationListener {
 	public void showFtpProgressOnScreen(int val) {
 		// trace
 		// ("WirelessInfo: showFtpProgressOnScreen: Got progress report. "+val+"%");
-		status("WirelessInfo.showFtpProgressOnScreen: Got progress report from FTP task. "
-				+ val + "%");
+		status("Got progress report from FTP task. "+ val + "%");
 	}
 
 	private void getTestLoginDetails() throws IOException {

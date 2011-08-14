@@ -39,37 +39,37 @@
     	android:layout_width="fill_parent"
 		android:layout_height="wrap_content">
 		
-    <Button android:text="Back" 
-    	android:id="@+id/backButton" 
-    	android:onClick="onClickBack"
-    	android:layout_weight="1"  
-    	android:layout_height="wrap_content"
-    	android:layout_width="wrap_content" 
-    />
-    
-    <Button android:text="Test DB" 
-    	android:id="@+id/connectFtp" 
-    	android:onClick="onClickDBTest"
-    	android:layout_weight="1"  
-    	android:layout_height="wrap_content"
-    	android:layout_width="wrap_content" 
-    />
-    
-    <ToggleButton android:id="@+id/ftpAction"
-		android:layout_width="wrap_content"
-		android:textOff="Connect"
-		android:textOn="Disconnect"
-		android:onClick="onClickftpAction"
-		android:layout_weight="1"
-	android:layout_height="match_parent"/>
-    	
-     <Button android:text="Throughput test" 
-    	android:id="@+id/thrputTestButton" 	
-    	android:onClick="onClickThrputTest"
-    	android:layout_weight="1" 
-    	android:layout_height="wrap_content"
-    	android:layout_width="wrap_content" 
-    />
+	    <Button android:text="Back" 
+	    	android:id="@+id/backButton" 
+	    	android:onClick="onClickBack"
+	    	android:layout_weight="1"  
+	    	android:layout_height="wrap_content"
+	    	android:layout_width="wrap_content" 
+	    />
+	    
+	    <Button android:text="Test DB" 
+	    	android:id="@+id/connectFtp" 
+	    	android:onClick="onClickDBTest"
+	    	android:layout_weight="1"  
+	    	android:layout_height="wrap_content"
+	    	android:layout_width="wrap_content" 
+	    />
+	    
+	    <ToggleButton android:id="@+id/ftpAction"
+			android:layout_width="wrap_content"
+			android:textOff="Connect"
+			android:textOn="Disconnect"
+			android:onClick="onClickftpAction"
+			android:layout_weight="1"
+		android:layout_height="match_parent"/>
+	    	
+	     <Button android:text="Throughput test" 
+	    	android:id="@+id/thrputTestButton" 	
+	    	android:onClick="onClickThrputTest"
+	    	android:layout_weight="1" 
+	    	android:layout_height="wrap_content"
+	    	android:layout_width="wrap_content" 
+	    />
     	
     </LinearLayout>
     
@@ -87,8 +87,8 @@
 	</TextView>
     
      <TextView android:id="@+id/trace" 
-        	android:text="File Name:" 
-        	android:layout_height="wrap_content"
+        android:text="File Name:" 
+        android:layout_height="wrap_content"
     	android:layout_width="wrap_content"></TextView>
     
 </LinearLayout>

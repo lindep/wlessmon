@@ -166,15 +166,51 @@ public class test extends Activity  {
 	public void onClickThrputTest(View v) {
 		trace("WirelessInfo: onClickThrputTest: Start.");
 		
+		spinServerName.getSelectedItemPosition();
+		Cursor cursor = (Cursor) spinServerName.getSelectedItem();
+		int key_rowid = cursor.getInt(cursor.getColumnIndex(WirelessInfoDBAdapter.KEY_ROWID));
+		String sName = cursor.getString(cursor.getColumnIndex(WirelessInfoDBAdapter.KEY_HOSTNAME));
+		
+		trace("onClickThrputTest: from Spinner. Server name = "+sName);
+		
+		dbAdapter = new WirelessInfoDBAdapter(this);
+	    try {
+	    	dbAdapter.open();
+	    	trace("Opened DB");
+	    	Cursor dbRecord = (Cursor) this.dbAdapter.fetchServerInfo(key_rowid);
+	    	trace("onClickThrputTest: from Spinner. Start DB Query with row_id = "+key_rowid);
+	    	
+	    	int port = dbRecord.getInt(dbRecord.getColumnIndex(WirelessInfoDBAdapter.KEY_PORT));
+	    	String loginid = dbRecord.getString(dbRecord.getColumnIndex(WirelessInfoDBAdapter.KEY_LOGINID));
+	    	String passwd = dbRecord.getString(dbRecord.getColumnIndex(WirelessInfoDBAdapter.KEY_PASSWD));
+	    	dbAdapter.close();
+	    	
+	    	trace("onClickThrputTest: from Spinner. Server = "+sName+", port = "+port+", Login ID = "+loginid+", Passwd = ***");
+	    	trace("onClickThrputTest: from Spinner. End DB Query with row_id = "+key_rowid);
+	    	
+	    	LoginDetails selectedServer = new LoginDetails();
+	    	selectedServer.setHost(sName);
+	    	selectedServer.setPort(port);
+	    	selectedServer.setId(loginid);
+	    	selectedServer.setPasswd(passwd);
+	    	
+	    	ThrPutTest ft = new ThrPutTest(this, "filename", selectedServer);
+	    	ft.execute("filename");
+	        
+	    } catch (SQLException e) {
+	    	trace("onClickDBTest: Fail to open db "+e.getMessage());
+	    	dbAdapter.close();
+	    }
+		
 		Bundle b = this.getIntent().getExtras();
 		if (b.getBoolean("hostStatus")) {
-			LoginDetails serverLogin = new LoginDetails();
-	        serverLogin.setHost(b.getString("host"));
-	        serverLogin.setPort(b.getInt("port"));
-	        serverLogin.setId(b.getString("id"));
-	        serverLogin.setPasswd(b.getString("passwd"));
+			LoginDetails serverLoginFromIntent = new LoginDetails();
+			serverLoginFromIntent.setHost(b.getString("host"));
+			serverLoginFromIntent.setPort(b.getInt("port"));
+			serverLoginFromIntent.setId(b.getString("id"));
+			serverLoginFromIntent.setPasswd(b.getString("passwd"));
         
-	        trace("onClickThrputTest: End. Got server to test = "+serverLogin.getHost());
+	        trace("onClickThrputTest: from Intent extras. Server name = "+serverLoginFromIntent.getHost());
 		} else {
 			Toast.makeText(this, "Please set Login Details first!", Toast.LENGTH_SHORT).show();
 		}
@@ -203,8 +239,9 @@ public class test extends Activity  {
 
 		ThrPutTest t = mCurrentThrPutTask;
 		if (t != null) {
-			trace("onClickConnect: Still connected, disconnect first");
+			trace("onClickftpAction: Still connected, disconnect first");
 		} else {
+			trace("onClickftpAction: Object ft for server ("+serverLogin.getHost()+")");
 			ThrPutTest ft = new ThrPutTest(this, "filename", serverLogin);
 			mCurrentThrPutTask = ft;
 		}
@@ -216,7 +253,19 @@ public class test extends Activity  {
 		} else if (mCurrentThrPutTask != null ){
 			trace("onClickftpAction: Will disconnect.");
 			mCurrentThrPutTask.mDisconnect();
+			mCurrentThrPutTask = null;
 		}
+	}
+	
+	public void showProgressOnScreen(int val) {
+		// trace
+		// ("WirelessInfo: showFtpProgressOnScreen: Got progress report. "+val+"%");
+		status("Got progress report from FTP task. "+ val + "%");
+	}
+	
+	public void status(String message) {
+		TextView tv = (TextView) findViewById(R.id.trace);
+		tv.setText(message);
 	}
 	
 	public void trace(String msg) {
