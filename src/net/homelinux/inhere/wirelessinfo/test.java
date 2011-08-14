@@ -166,7 +166,7 @@ public class test extends Activity  {
 	public void onClickThrputTest(View v) {
 		trace("WirelessInfo: onClickThrputTest: Start.");
 		
-		spinServerName.getSelectedItemPosition();
+		//spinServerName.getSelectedItemPosition();
 		Cursor cursor = (Cursor) spinServerName.getSelectedItem();
 		int key_rowid = cursor.getInt(cursor.getColumnIndex(WirelessInfoDBAdapter.KEY_ROWID));
 		String sName = cursor.getString(cursor.getColumnIndex(WirelessInfoDBAdapter.KEY_HOSTNAME));

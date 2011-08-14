@@ -72,7 +72,16 @@ public class ThrPutTest extends AsyncTask<String, Integer, ThrPutStats> {
 		tps = new ThrPutStats(555, 555, 5555);
 		
 		mConnect();
-		publishProgress( (int) 333 );
+		String remoteDir = "/";
+	     //FTPFile[] remoteFiles = con.listFiles( remoteDir );
+		FTPFile[] remoteFiles = null;
+		try {
+	        remoteFiles = ftpConnection.listFiles( );
+	        publishProgress( (int) remoteFiles.length );
+        } catch (IOException f) {
+        	trace("doInBackground: IOException: "+f.getMessage());
+		}
+		//publishProgress( (int) 333 );
 		mDisconnect();
 		
 		return tps;
