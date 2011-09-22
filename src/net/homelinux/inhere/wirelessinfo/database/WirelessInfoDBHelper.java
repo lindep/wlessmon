@@ -11,7 +11,10 @@ public class WirelessInfoDBHelper extends SQLiteOpenHelper {
 	private static final int DATABASE_VERSION = 2;
 
 	// Database creation sql statement
-	private static final String DATABASE_CREATE = "create table serverLogin (_id integer primary key autoincrement, "
+	private static final String CREATE_TABLE_SERVERLOGIN = "create table serverLogin (_id integer primary key autoincrement, "
+			+ "hostname text not null, port integer not null, loginid text not null, passwd text not null);";
+         
+  private static final String CREATE_TABLE_CELLINFO = "create table cellInfo(_id integer primary key autoincrement, "
 			+ "hostname text not null, port integer not null, loginid text not null, passwd text not null);";
 
 	public WirelessInfoDBHelper(Context context) {
@@ -21,7 +24,8 @@ public class WirelessInfoDBHelper extends SQLiteOpenHelper {
 	// Method is called during creation of the database
 	@Override
 	public void onCreate(SQLiteDatabase database) {
-		database.execSQL(DATABASE_CREATE);
+		database.execSQL(CREATE_TABLE_SERVERLOGIN);
+    database.execSQL(CREATE_TABLE_CELLINFO);
 	}
 
 	// Method is called during an upgrade of the database, e.g. if you increase
@@ -32,6 +36,7 @@ public class WirelessInfoDBHelper extends SQLiteOpenHelper {
 		trace(WirelessInfoDBHelper.class.getName()+": Upgrading database from version " + oldVersion + " to "
 						+ newVersion + ", which will destroy all old data");
 		database.execSQL("DROP TABLE IF EXISTS serverLogin");
+    database.execSQL("DROP TABLE IF EXISTS cellInfo");
 		onCreate(database);
 	}
 	
