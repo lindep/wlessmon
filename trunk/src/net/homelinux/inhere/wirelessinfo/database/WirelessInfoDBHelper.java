@@ -14,7 +14,7 @@ public class WirelessInfoDBHelper extends SQLiteOpenHelper {
 	private static final String CREATE_TABLE_SERVERLOGIN = "create table serverLogin (_id integer primary key autoincrement, "
 			+ "hostname text not null, port integer not null, loginid text not null, passwd text not null);";
          
-  private static final String CREATE_TABLE_CELLINFO = "create table cell_info (_id integer primary key autoincrement, "
+  private static final String CREATE_TABLE_CELLINFO = "create table cellInfo (_id integer primary key autoincrement, "
 			+ "cellid integer not null, sitename text not null, cellname text not null, lat real not null, lng real not null);";
  
 
