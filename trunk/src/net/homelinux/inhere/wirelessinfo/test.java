@@ -124,7 +124,7 @@ public class test extends Activity  {
         String s1 = b.getString("IDENT1");
         trace("onClickBack: From parent intent = "+s+", second string = "+s1);
         
-        String FileName = InputFileName.getText().toString();
+        String FileName = "FileName";
 		
 		try{
 			Intent resultIntent = new Intent(getApplicationContext(),test.class);
