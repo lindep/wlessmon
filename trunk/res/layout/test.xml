@@ -24,7 +24,7 @@
         	android:layout_weight="0.10">
 	</TextView>
         	
-        <EditText android:id="@+id/inputFileName"
+        <EditText android:id="@+id/cellLookupName"
         	android:layout_weight="1" 
         	android:layout_width="194dp" 
         	android:layout_height="wrap_content">

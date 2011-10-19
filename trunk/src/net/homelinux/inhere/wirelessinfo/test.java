@@ -22,11 +22,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 import net.homelinux.inhere.wirelessinfo.database.WirelessInfoDBAdapter;
+import net.homelinux.inhere.wirelessinfo.database.cellinfoDBAdapter;
 
 public class test extends Activity  {
 	//implements AdapterView.OnItemSelectedListener
 	String PUBLIC_STATIC_STRING_IDENTIFIER = null;
-	private EditText InputFileName;
+	private EditText cellLookupName;
+	private TextView tvTrace; 
 	private Button connectFtpButton;
 	private ToggleButton ftpActionButton;
 	LoginDetails serverLogin = null;
@@ -34,6 +36,7 @@ public class test extends Activity  {
 	private ThrPutTest mCurrentThrPutTask = null;
 	
 	private WirelessInfoDBAdapter dbAdapter;
+	private cellinfoDBAdapter cellInfoDbA;
 	
 	private Spinner spinServerName;
 	private Cursor cursor;
@@ -43,7 +46,7 @@ public class test extends Activity  {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.test);
 		
-		InputFileName = (EditText) findViewById(R.id.inputFileName);
+		cellLookupName = (EditText) findViewById(R.id.cellLookupName);
 		TextView tvTrace = (TextView) findViewById(R.id.trace);
 		connectFtpButton = (Button) findViewById(R.id.connectFtp);
 		
@@ -116,6 +119,13 @@ public class test extends Activity  {
 	// ignore
 	}
 */	
+	public void onClickCellLookup(View v) {
+		trace("onClickCellLookup: start.");
+		String cellName = cellLookupName.getText().toString();
+		trace("onClickCellLookup: got value from edittext = "+cellName);
+		//tvTrace.setText(cellName);
+	}
+	
 	public void onClickBack(View v) {
 		trace("onClickBack: Start.");
 		
