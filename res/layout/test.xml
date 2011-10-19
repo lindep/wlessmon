@@ -21,7 +21,8 @@
         	android:id="@+id/textView1" 
         	android:text="Lookup:" 
         	android:layout_height="32dp" 
-        	android:layout_weight="0.10"></TextView>
+        	android:layout_weight="0.10">
+	</TextView>
         	
         <EditText android:id="@+id/inputFileName"
         	android:layout_weight="1" 
