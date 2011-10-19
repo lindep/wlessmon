@@ -121,19 +121,7 @@ public class test extends Activity  {
 	// ignore
 	}
 */	
-	public void onClickCellLookup(View v) {
-		trace("onClickCellLookup: start.");
-		String cellName = cellLookupName.getText().toString();
-		trace("onClickCellLookup: got value from edittext = "+cellName);
-		if (cellName.length() > 0) {
-			trace(cellName);
-			status(cellName);
-		}
-		else {
-			trace("No name to lookup!");
-		}
-		
-	}
+	
 	
 	public void onClickBack(View v) {
 		trace("onClickBack: Start.");
@@ -180,6 +168,36 @@ public class test extends Activity  {
 	    public void onNothingSelected(AdapterView parent) {
 	      // Do nothing.
 	    }
+	}
+	
+	public void onClickCellLookup(View v) {
+		trace("onClickCellLookup: start.");
+		String cellName = cellLookupName.getText().toString();
+		trace("onClickCellLookup: got value from edittext = "+cellName);
+		if (cellName.length() > 0) {
+			
+			try {
+				cellInfoDbA.open();
+				trace("onClickCellLookup: DB Open");
+				try {
+					Cursor cellInfoRecord = (Cursor) this.cellInfoDbA.getInfoByCellName(cellName);
+					String sitename = cellInfoRecord.getString(cellInfoRecord.getColumnIndex(cellinfoDBAdapter.KEY_SITENAME));
+					
+					trace("onClickCellLookup: "+cellName+" sitename = "+sitename);
+					status(cellName+" sitename = "+sitename);
+					
+				} catch (SQLException e) {
+			    	trace("onClickCellLookup: "+e.getMessage());
+			    	cellInfoDbA.close();
+			    }
+			} catch (SQLException e) {
+				trace("onClickCellLookup: "+e.getMessage());
+			}
+		}
+		else {
+			trace("onClickCellLookup: No name to lookup!");
+		}
+		
 	}
 	
 	public void onClickThrputTest(View v) {
