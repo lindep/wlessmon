@@ -93,6 +93,8 @@ public class test extends Activity  {
 		} else {
 			Toast.makeText(this, "Please set Login Details first!", Toast.LENGTH_SHORT).show();
 		}
+		
+		cellInfoDbA = new cellinfoDBAdapter(this);
 	}
 	
 	private void fillSpinner() {
@@ -123,7 +125,14 @@ public class test extends Activity  {
 		trace("onClickCellLookup: start.");
 		String cellName = cellLookupName.getText().toString();
 		trace("onClickCellLookup: got value from edittext = "+cellName);
-		//tvTrace.setText(cellName);
+		if (cellName.length() > 0) {
+			trace(cellName);
+			status(cellName);
+		}
+		else {
+			trace("No name to lookup!");
+		}
+		
 	}
 	
 	public void onClickBack(View v) {
