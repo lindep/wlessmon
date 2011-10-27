@@ -1,6 +1,20 @@
 package net.homelinux.inhere.wirelessinfo;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.util.List;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import android.app.Activity;
 import android.app.ListActivity;
@@ -181,10 +195,19 @@ public class test extends Activity  {
 				trace("onClickCellLookup: DB Open");
 				try {
 					Cursor cellInfoRecord = (Cursor) this.cellInfoDbA.getInfoByCellName(cellName);
-					String sitename = cellInfoRecord.getString(cellInfoRecord.getColumnIndex(cellinfoDBAdapter.KEY_SITENAME));
+					trace("onClickCellLookup: Cursor = "+cellInfoRecord);
 					
-					trace("onClickCellLookup: "+cellName+" sitename = "+sitename);
-					status(cellName+" sitename = "+sitename);
+					if (cellInfoRecord.getCount() > 0) {
+						trace("onClickCellLookup: Found "+cellInfoRecord.getCount()+" records");
+						String sitename = cellInfoRecord.getString(cellInfoRecord.getColumnIndex(cellinfoDBAdapter.KEY_SITENAME));
+						
+						trace("onClickCellLookup: "+cellName+" sitename = "+sitename);
+						status(cellName+" sitename = "+sitename);
+					}
+					else {
+						trace("onClickCellLookup: No records");
+					}
+					
 					
 				} catch (SQLException e) {
 			    	trace("onClickCellLookup: "+e.getMessage());
@@ -269,6 +292,15 @@ public class test extends Activity  {
 	    	trace("onClickDBTest: Fail to open db "+e.getMessage());
 	    	dbAdapter.close();
 	    }
+	    
+	    try {
+	    	getCellInfoFromNetwork();
+	    } catch (IOException e) {
+			status("setLoginDetails: Failure. " + e.getMessage());
+		}
+	    /*cellInfoDbA.open();
+	    this.cellInfoDbA.createCellInfo(1234, "sitename", "cellname", 2222, 3333);
+	    cellInfoDbA.close();*/
 	}
 	
 	public void onClickftpAction(View v) {
@@ -298,6 +330,118 @@ public class test extends Activity  {
 		// trace
 		// ("WirelessInfo: showFtpProgressOnScreen: Got progress report. "+val+"%");
 		status("Got progress report from FTP task. "+ val + "%");
+	}
+	
+	private void getCellInfoFromNetwork() throws IOException {
+		trace("getCellInfoFromNetwork: Start.");
+		
+		InputStream is = null;
+		ByteArrayOutputStream bos = null;
+		byte[] data = null;
+		try {
+			StringBuilder uri = new StringBuilder(
+					"http://inhere.homelinux.net/test/getcellinfo.php");
+			uri.append("?alt=json");
+			HttpGet request = new HttpGet(uri.toString());
+			HttpClient httpClient = new DefaultHttpClient();
+			HttpResponse response = httpClient.execute(request);
+			int status = response.getStatusLine().getStatusCode();
+			if (status != HttpURLConnection.HTTP_OK) {
+				switch (status) {
+				case HttpURLConnection.HTTP_NO_CONTENT:
+					throw new IOException("The cell could not be "
+							+ "found in the database");
+				case HttpURLConnection.HTTP_BAD_REQUEST:
+					throw new IOException("Check if some parameter "
+							+ "is missing or misspelled");
+				case HttpURLConnection.HTTP_UNAUTHORIZED:
+					throw new IOException("Make sure the API key is "
+							+ "present and valid");
+				case HttpURLConnection.HTTP_FORBIDDEN:
+					throw new IOException("You have reached the limit"
+							+ "for the number of requests per day. The "
+							+ "maximum number of requests per day is "
+							+ "currently 500.");
+				case HttpURLConnection.HTTP_NOT_FOUND:
+					throw new IOException("The cell could not be found"
+							+ "in the database");
+				default:
+					throw new IOException("HTTP response code: " + status);
+				}
+			}
+			trace("getCellInfoFromNetwork: After http connection, getting login details from web.");
+
+			// The response was ok (HTTP_OK) so lets read the data
+			HttpEntity entity = response.getEntity();
+			is = entity.getContent();
+			bos = new ByteArrayOutputStream();
+			byte buf[] = new byte[256];
+			while (true) {
+				int rd = is.read(buf, 0, 256);
+				if (rd == -1)
+					break;
+				bos.write(buf, 0, rd);
+			}
+			bos.flush();
+			data = bos.toByteArray();
+
+			trace("getCellInfoFromNetwork: Finished adding byteStream to local var.");
+			boolean dbGood = false;
+			if (data != null) {
+				cellInfoDbA = new cellinfoDBAdapter(this);
+				try {
+					cellInfoDbA.open();
+			    	dbGood = true;
+			    	trace("getCellInfoFromNetwork: Opened DB");
+			    } catch (SQLException e) {
+			    	trace("getCellInfoFromNetwork: Fail to open db "+e.getMessage());
+			    	cellInfoDbA.close();
+			    }
+				try {
+					JSONArray info = new JSONObject(new String(data)).getJSONArray("info");
+					int numVals = info.length();
+					for (int i = 0; i < numVals; i++) {
+						JSONObject jobj = info.getJSONObject(i);
+						
+						trace("getCellInfoFromNetwork: Adding new server ("+jobj.getString("cellid")+") info to DB");
+						cellInfoDbA.createCellInfo(
+								jobj.getInt("cellid"), 
+								jobj.getString("sitename"), 
+								jobj.getString("cellname"), 
+								jobj.getDouble("lat"),
+								jobj.getDouble("lng"));
+					}
+					
+					if (dbGood) {
+						cellInfoDbA.close();
+						trace("getCellInfoFromNetwork: Closed DB");
+					}
+				} catch (JSONException e) {
+					trace(e.getMessage());
+					e.printStackTrace();
+				} catch (Exception e) {
+					trace(e.getMessage());
+					e.printStackTrace();
+				}
+			}
+		} catch (MalformedURLException e) {
+			Log.e("ERROR", e.getMessage());
+		} catch (IllegalArgumentException e) {
+			throw new IOException(
+					"URL was incorrect. Did you forget to set the API_KEY?");
+		} finally {
+			// make sure we clean up after us
+			try {
+				if (bos != null)
+					bos.close();
+			} catch (Exception e) {
+			}
+			try {
+				if (is != null)
+					is.close();
+			} catch (Exception e) {
+			}
+		}
 	}
 	
 	public void status(String message) {
