@@ -41,7 +41,7 @@ import net.homelinux.inhere.wirelessinfo.database.cellinfoDBAdapter;
 public class test extends Activity  {
 	//implements AdapterView.OnItemSelectedListener
 	String PUBLIC_STATIC_STRING_IDENTIFIER = null;
-	private EditText cellLookupName;
+	private EditText cellLookupInfo;
 	private TextView tvTrace; 
 	private Button connectFtpButton;
 	private ToggleButton ftpActionButton;
@@ -60,7 +60,7 @@ public class test extends Activity  {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.test);
 		
-		cellLookupName = (EditText) findViewById(R.id.cellLookupName);
+		cellLookupInfo = (EditText) findViewById(R.id.cellLookupName);
 		TextView tvTrace = (TextView) findViewById(R.id.trace);
 		connectFtpButton = (Button) findViewById(R.id.connectFtp);
 		
@@ -186,23 +186,24 @@ public class test extends Activity  {
 	
 	public void onClickCellLookup(View v) {
 		trace("onClickCellLookup: start.");
-		String cellName = cellLookupName.getText().toString();
-		trace("onClickCellLookup: got value from edittext = "+cellName);
-		if (cellName.length() > 0) {
+		String cellInfo = cellLookupInfo.getText().toString();
+		trace("onClickCellLookup: got value from edittext = "+cellInfo);
+		if (cellInfo.length() > 0) {
 			
 			try {
 				cellInfoDbA.open();
 				trace("onClickCellLookup: DB Open");
 				try {
-					Cursor cellInfoRecord = (Cursor) this.cellInfoDbA.getInfoByCellName(cellName);
+					Cursor cellInfoRecord = (Cursor) this.cellInfoDbA.getInfoByCellId(cellInfo);
 					trace("onClickCellLookup: Cursor = "+cellInfoRecord);
 					
 					if (cellInfoRecord.getCount() > 0) {
 						trace("onClickCellLookup: Found "+cellInfoRecord.getCount()+" records");
 						String sitename = cellInfoRecord.getString(cellInfoRecord.getColumnIndex(cellinfoDBAdapter.KEY_SITENAME));
+						String cellname = cellInfoRecord.getString(cellInfoRecord.getColumnIndex(cellinfoDBAdapter.KEY_CELLNAME));
 						
-						trace("onClickCellLookup: "+cellName+" sitename = "+sitename);
-						status(cellName+" sitename = "+sitename);
+						trace("onClickCellLookup: "+cellInfo+", cellname = "+cellname+", sitename = "+sitename);
+						status(cellInfo+", Cell name = "+cellname+", Site name = "+sitename);
 					}
 					else {
 						trace("onClickCellLookup: No records");
@@ -341,7 +342,7 @@ public class test extends Activity  {
 		try {
 			StringBuilder uri = new StringBuilder(
 					"http://inhere.homelinux.net/test/getcellinfo.php");
-			uri.append("?alt=json");
+			uri.append("?alt=json&key=53024");
 			HttpGet request = new HttpGet(uri.toString());
 			HttpClient httpClient = new DefaultHttpClient();
 			HttpResponse response = httpClient.execute(request);
@@ -358,13 +359,13 @@ public class test extends Activity  {
 					throw new IOException("Make sure the API key is "
 							+ "present and valid");
 				case HttpURLConnection.HTTP_FORBIDDEN:
-					throw new IOException("You have reached the limit"
+					throw new IOException("You have reached the limit "
 							+ "for the number of requests per day. The "
 							+ "maximum number of requests per day is "
 							+ "currently 500.");
 				case HttpURLConnection.HTTP_NOT_FOUND:
-					throw new IOException("The cell could not be found"
-							+ "in the database");
+					throw new IOException("The cell could not be found "
+							+ "in the database " + status);
 				default:
 					throw new IOException("HTTP response code: " + status);
 				}
