@@ -118,6 +118,17 @@ public class cellinfoDBAdapter {
 		}
 		return mCursor;
 	}
+	
+	public Cursor getInfoByCellId(String cellid) throws SQLException {
+		final String SQL_STATEMENT = "SELECT "+KEY_ROWID+", "+KEY_CELLID+", "+KEY_SITENAME+", "+KEY_CELLNAME+", "+KEY_LAT+", "+KEY_LNG+" FROM "+DATABASE_TABLE+" WHERE "+KEY_CELLID+"=?";	
+		Cursor mCursor = database.rawQuery(SQL_STATEMENT, new String[] { cellid });
+		trace("getInfoByCellName: After SQL Query");    
+		
+		if (mCursor != null) {
+			mCursor.moveToFirst();
+		}
+		return mCursor;
+	}
 
 	private ContentValues createContentValues(int cellid, String sitename, String cellname, double lat, double lng) {
 		ContentValues values = new ContentValues();
