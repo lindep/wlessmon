@@ -3,8 +3,6 @@ package net.homelinux.inhere.wirelessinfo.database;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.homelinux.inhere.wirelessinfo.test;
-
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -108,6 +106,11 @@ public class cellinfoDBAdapter {
 		return mCursor;
 	}
 	
+	/**
+	 * query cell info by cell name
+	 * 
+	 * @return Cursor for all records for this cell name
+	 */
 	public Cursor getInfoByCellName(String cellname) throws SQLException {
 		final String SQL_STATEMENT = "SELECT "+KEY_ROWID+", "+KEY_CELLID+", "+KEY_SITENAME+", "+KEY_CELLNAME+", "+KEY_LAT+", "+KEY_LNG+" FROM "+DATABASE_TABLE+" WHERE "+KEY_CELLNAME+"=?";	
 		Cursor mCursor = database.rawQuery(SQL_STATEMENT, new String[] { cellname });
@@ -119,6 +122,11 @@ public class cellinfoDBAdapter {
 		return mCursor;
 	}
 	
+	/**
+	 * query cell info by cell ID
+	 * 
+	 * @return Cursor for all records for this cell ID
+	 */
 	public Cursor getInfoByCellId(String cellid) throws SQLException {
 		final String SQL_STATEMENT = "SELECT "+KEY_ROWID+", "+KEY_CELLID+", "+KEY_SITENAME+", "+KEY_CELLNAME+", "+KEY_LAT+", "+KEY_LNG+" FROM "+DATABASE_TABLE+" WHERE "+KEY_CELLID+"=?";	
 		Cursor mCursor = database.rawQuery(SQL_STATEMENT, new String[] { cellid });
@@ -153,6 +161,17 @@ public class cellinfoDBAdapter {
 		         cursor.close();
 		      }
 		      return list;
+	}
+	
+	public int getDbInfo() {
+		final String SQL_STATEMENT = "SELECT count(*) as _id FROM "+DATABASE_TABLE;	
+		Cursor mCursor = database.rawQuery(SQL_STATEMENT, new String [] {});
+		trace("getDbInfo: After SQL Query");    
+		
+		if (mCursor != null) {
+			mCursor.moveToFirst();
+		}
+		return mCursor.getInt(mCursor.getColumnIndex("_id"));
 	}
 	
 	public void trace(String msg) {

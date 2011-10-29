@@ -17,13 +17,15 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.Activity;
-import android.app.ListActivity;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
@@ -37,12 +39,15 @@ import android.widget.Toast;
 import android.widget.ToggleButton;
 import net.homelinux.inhere.wirelessinfo.database.WirelessInfoDBAdapter;
 import net.homelinux.inhere.wirelessinfo.database.cellinfoDBAdapter;
+import net.homelinux.inhere.wirelessinfo.verification.WirelessInfoException;
 
 public class test extends Activity  {
 	//implements AdapterView.OnItemSelectedListener
+	private ProgressDialog progressDialog;
+	
 	String PUBLIC_STATIC_STRING_IDENTIFIER = null;
 	private EditText cellLookupInfo;
-	private TextView tvTrace; 
+	@SuppressWarnings("unused")
 	private Button connectFtpButton;
 	private ToggleButton ftpActionButton;
 	LoginDetails serverLogin = null;
@@ -61,7 +66,7 @@ public class test extends Activity  {
 		setContentView(R.layout.test);
 		
 		cellLookupInfo = (EditText) findViewById(R.id.cellLookupName);
-		TextView tvTrace = (TextView) findViewById(R.id.trace);
+		findViewById(R.id.trace);
 		connectFtpButton = (Button) findViewById(R.id.connectFtp);
 		
 		spinServerName = (Spinner) findViewById(R.id.ftpHostSpinner);
@@ -76,9 +81,8 @@ public class test extends Activity  {
 	    
 	    
 	    Intent intent = getIntent();
-	    Parcelable p = intent.getParcelableExtra("serverLogin");
-	    LoginDetails serverLoginObjTest = intent.getParcelableExtra("serverLogin");
-	    //serverLoginObj = (LoginDetails[]) intent.getParcelableArrayExtra("arrayServerlogin");
+	    intent.getParcelableExtra("serverLogin");
+	    intent.getParcelableExtra("serverLogin");
 	    
 	    //LoginDetails serverLoginObj = (LoginDetails)this.getIntent().getParcelableExtra("serverLogin");
 	    
@@ -165,7 +169,8 @@ public class test extends Activity  {
 	        View view, int pos, long id) {
 	      trace("The file size = " +parent.getItemAtPosition(pos).toString());
 	    }
-	    public void onNothingSelected(AdapterView parent) {
+	    @SuppressWarnings("rawtypes")
+		public void onNothingSelected(AdapterView parent) {
 	      // Do nothing.
 	    }
 	}
@@ -179,7 +184,8 @@ public class test extends Activity  {
 	    	String host = cursor.getString(cursor.getColumnIndex(WirelessInfoDBAdapter.KEY_HOSTNAME));
 	      trace("Spinner, pos = "+pos+", server = " +host+", id = "+id+", row_id = "+key_rowid);
 	    }
-	    public void onNothingSelected(AdapterView parent) {
+	    @SuppressWarnings("rawtypes")
+		public void onNothingSelected(AdapterView parent) {
 	      // Do nothing.
 	    }
 	}
@@ -294,14 +300,17 @@ public class test extends Activity  {
 	    	dbAdapter.close();
 	    }
 	    
-	    try {
-	    	getCellInfoFromNetwork();
-	    } catch (IOException e) {
-			status("setLoginDetails: Failure. " + e.getMessage());
-		}
-	    /*cellInfoDbA.open();
-	    this.cellInfoDbA.createCellInfo(1234, "sitename", "cellname", 2222, 3333);
-	    cellInfoDbA.close();*/
+	    cellInfoDbA = new cellinfoDBAdapter(this);
+		try {
+			cellInfoDbA.open();
+			int records = cellInfoDbA.getDbInfo();
+	    	trace("onClickDBTest: "+records+" in cell info DB");
+	    	status("Founds "+records+" cell info records");
+	    	cellInfoDbA.close();
+	    } catch (SQLException e) {
+	    	trace("purgeCellInfo: Fail to open db "+e.getMessage());
+	    	cellInfoDbA.close();
+	    }
 	}
 	
 	public void onClickftpAction(View v) {
@@ -331,6 +340,46 @@ public class test extends Activity  {
 		// trace
 		// ("WirelessInfo: showFtpProgressOnScreen: Got progress report. "+val+"%");
 		status("Got progress report from FTP task. "+ val + "%");
+	}
+	
+	private void purgeCellInfo() throws WirelessInfoException {
+		
+		cellInfoDbA = new cellinfoDBAdapter(this);
+		try {
+			cellInfoDbA.open();
+			cellInfoDbA.deleteAllCellInfo();
+	    	trace("purgeCellInfo: Opened DB");
+	    	status("Cell Info purged");
+	    	cellInfoDbA.close();
+	    } catch (SQLException e) {
+	    	trace("purgeCellInfo: Fail to open db "+e.getMessage());
+	    	cellInfoDbA.close();
+	    	throw new WirelessInfoException("Failed to access cell Info DB!");
+	    }
+	}
+	
+	private boolean loadCellInfoLocal() throws WirelessInfoException {
+		
+		progressDialog = ProgressDialog.show(this, "Please wait....",
+		"Retrieving Cell Info Details");
+		
+		new Thread(new Runnable() {
+			public void run() {
+				try {
+					getCellInfoFromNetwork();
+					progressDialog.dismiss();
+				} catch (IOException e) {
+					status("setLoginDetails: Failure. " + e.getMessage());
+					try {
+						throw new WirelessInfoException("Failed to access cell Info DB!");
+					} catch (WirelessInfoException e1) {
+						e1.printStackTrace();
+						trace("loadCellInfoLocal: "+e1.getMessage());
+					}
+				}
+			}
+		}).start();
+		return true;
 	}
 	
 	private void getCellInfoFromNetwork() throws IOException {
@@ -443,6 +492,43 @@ public class test extends Activity  {
 			} catch (Exception e) {
 			}
 		}
+	}
+	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		MenuInflater inflater = getMenuInflater();
+		inflater.inflate(R.menu.testmenu, menu);
+		return true;
+	}
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		
+		case R.id.mLoad:
+			trace("onOptionsItemSelected: Get new cell info data and load into load DB.");
+			
+			try {
+				loadCellInfoLocal();
+				trace("onOptionsItemSelected: Found server Info in DB");
+			} catch (WirelessInfoException e) {
+				trace("onOptionsItemSelected: "+e.getMessage());
+			}
+	
+			break;
+		case R.id.mClear:
+			try {
+				purgeCellInfo();
+				trace("onOptionsItemSelected: click Clear cell info on menu");
+			} catch (WirelessInfoException e) {
+				trace("onOptionsItemSelected: "+e.getMessage());
+			}
+			break;
+		case R.id.icontext:
+			trace("onOptionsItemSelected: menu");
+			break;
+		}
+		return true;
 	}
 	
 	public void status(String message) {

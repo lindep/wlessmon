@@ -6,7 +6,6 @@ import android.net.TrafficStats;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -25,7 +24,6 @@ public class MyFtpTask extends AsyncTask<String, Integer, ThrPutStats> {
 	long FileLenght = 0;
 	private WirelessInfo mActivity;
 	private String mFilename;
-	private boolean mCompleted = false;
 	private boolean mCancelled = false;
 	
 	private String mHost;
@@ -54,7 +52,6 @@ public class MyFtpTask extends AsyncTask<String, Integer, ThrPutStats> {
 	
 	@Override 
     protected void onCancelled () {
-        mCompleted = true;
         mCancelled = true;
         tps = new ThrPutStats(0, 0.0, 1);
         Integer[] mMovesCompleted;
@@ -64,6 +61,7 @@ public class MyFtpTask extends AsyncTask<String, Integer, ThrPutStats> {
         disconnect ();
     }
 	
+	@SuppressWarnings("unused")
 	@Override
 	protected ThrPutStats doInBackground(String... arg0) {
 
@@ -240,7 +238,6 @@ public class MyFtpTask extends AsyncTask<String, Integer, ThrPutStats> {
 	
 	@Override 
     protected void onPostExecute (ThrPutStats moveCount) {
-        mCompleted = true;
         if (mActivity != null) mActivity.onFtpTaskCompleted (this, moveCount, mCancelled);
         disconnect ();
     }

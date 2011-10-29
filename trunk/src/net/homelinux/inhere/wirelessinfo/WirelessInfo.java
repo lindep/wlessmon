@@ -13,14 +13,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.util.List;
-import java.util.StringTokenizer;
-
 import net.homelinux.inhere.wirelessinfo.database.WirelessInfoDBAdapter;
-import net.homelinux.inhere.wirelessinfo.test.MyServerNameItemSelectedListener;
 import net.homelinux.inhere.wirelessinfo.verification.VerifyService;
 import net.homelinux.inhere.wirelessinfo.verification.WirelessInfoException;
 
@@ -29,14 +25,12 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -53,11 +47,9 @@ import android.os.Environment;
 import android.os.Parcelable;
 import android.telephony.NeighboringCellInfo;
 import android.telephony.PhoneStateListener;
-import android.telephony.ServiceState;
 import android.telephony.TelephonyManager;
 import android.telephony.SignalStrength;
 import android.telephony.gsm.GsmCellLocation;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
@@ -71,6 +63,7 @@ import android.net.TrafficStats;
 
 import com.loopj.android.http.*;
 
+@SuppressWarnings("unused")
 public class WirelessInfo extends Activity implements LocationListener {
 
 	// private final static String API_KEY =
@@ -601,7 +594,6 @@ public class WirelessInfo extends Activity implements LocationListener {
 				if (mCursor.moveToFirst()) {
 					int rowCount = mCursor.getCount();
 					int i = 0;
-					String name = "";
 					String apn;
 					boolean foundAPN = false;
 					while (i < rowCount) {

@@ -20,6 +20,7 @@ import org.apache.commons.net.ftp.FTPFile;
 
 import android.util.Log;
 
+@SuppressWarnings("unused")
 public class ThrPutTest extends AsyncTask<String, Integer, ThrPutStats> {
 	
 	long FileLenght = 0;
