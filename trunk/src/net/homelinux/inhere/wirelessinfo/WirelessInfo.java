@@ -17,6 +17,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.util.List;
 import net.homelinux.inhere.wirelessinfo.database.WirelessInfoDBAdapter;
+import net.homelinux.inhere.wirelessinfo.database.cellinfoDBAdapter;
 import net.homelinux.inhere.wirelessinfo.verification.VerifyService;
 import net.homelinux.inhere.wirelessinfo.verification.WirelessInfoException;
 
@@ -63,7 +64,6 @@ import android.net.TrafficStats;
 
 import com.loopj.android.http.*;
 
-@SuppressWarnings("unused")
 public class WirelessInfo extends Activity implements LocationListener {
 
 	// private final static String API_KEY =
@@ -96,6 +96,7 @@ public class WirelessInfo extends Activity implements LocationListener {
 	VerifyService verify;
 	
 	private WirelessInfoDBAdapter dbAdapter;
+	private cellinfoDBAdapter cellInfoDbA;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -226,11 +227,20 @@ public class WirelessInfo extends Activity implements LocationListener {
 				/*
 				 * Update the GUI with the current cell's info
 				 */
+				String cellid = getCellId(cid, networkType);
+				String cellinfo;
+				try {
+					cellinfo = getCellById(Integer.parseInt(cellid));
+				} catch (WirelessInfoException e) {
+					cellinfo = "";
+				}
+				
 				((TextView) findViewById(R.id.networktype))
 						.setText("Network Type: " + networkType + ": "
 								+ tm.getNetworkType());
 				((TextView) findViewById(R.id.TextView01)).setText(": CellID: "
-						+ getCellId(cid, networkType) + ": " + cid);
+						+ cellid + ": " + cid);
+				((TextView) findViewById(R.id.CellInfo)).setText(cellinfo);
 				((TextView) findViewById(R.id.TextView02)).setText("LAC: "
 						+ getPaddedInt(lac, 4) + ": " + getPaddedHex(lac, 4));
 				((TextView) findViewById(R.id.TextView03)).setText("MCC: "
@@ -1064,6 +1074,51 @@ public class WirelessInfo extends Activity implements LocationListener {
 		}
 		
 		return typeString;
+	}
+	
+	/**
+	 * Return a Cell Name as sting
+	 * 
+	 * @return String
+	 */
+	
+	public String getCellById(int cellid) throws WirelessInfoException {
+		String cellname = "", sitename = "";
+		trace("getCellById: start.");
+		cellInfoDbA = new cellinfoDBAdapter(this);
+		trace("getCellById: got value from edittext = "+cellid);
+		if (! (cellid > 0 && cellid < 65535)) {
+			throw new WirelessInfoException("Invalid cell ID");
+		}
+			
+		try {
+			cellInfoDbA.open();
+			trace("onClickCellLookup: DB Open");
+			try {
+				Cursor cellInfoRecord = (Cursor) this.cellInfoDbA.getInfoByCellId(String.valueOf(cellid));
+				trace("onClickCellLookup: Cursor = "+cellInfoRecord);
+				
+				if (cellInfoRecord.getCount() > 0) {
+					trace("onClickCellLookup: Found "+cellInfoRecord.getCount()+" records");
+					sitename = cellInfoRecord.getString(cellInfoRecord.getColumnIndex(cellinfoDBAdapter.KEY_SITENAME));
+					cellname = cellInfoRecord.getString(cellInfoRecord.getColumnIndex(cellinfoDBAdapter.KEY_CELLNAME));
+					
+					trace("onClickCellLookup: "+cellid+", cellname = "+cellname+", sitename = "+sitename);
+					status(cellid+", Cell name = "+cellname+", Site name = "+sitename);
+				} else {
+					trace("onClickCellLookup: No records");
+					status("No records for cell ID "+cellid);
+				}
+				cellInfoDbA.close();
+				
+			} catch (SQLException e) {
+		    	trace("onClickCellLookup: "+e.getMessage());
+		    	cellInfoDbA.close();
+		    }
+		} catch (SQLException e) {
+			trace("onClickCellLookup: "+e.getMessage());
+		}
+		return cellname+", "+sitename;
 	}
 	
 	public void status(String message) {

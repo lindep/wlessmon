@@ -213,6 +213,7 @@ public class test extends Activity  {
 					}
 					else {
 						trace("onClickCellLookup: No records");
+						status("No records for cell ID "+cellInfo);
 					}
 					
 					
