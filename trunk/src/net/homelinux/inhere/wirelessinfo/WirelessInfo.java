@@ -72,6 +72,8 @@ public class WirelessInfo extends Activity implements LocationListener {
 	private boolean upLoadCellInfo = false;
 	private int ssdbm;
 	private ProgressDialog progressDialog;
+	
+	private double lat, lng;
 
 	private TelephonyManager tm;
 	MyPhoneStateListener MyListener;
@@ -121,8 +123,8 @@ public class WirelessInfo extends Activity implements LocationListener {
 		// Initialize the location fields
 		if (location != null) {
 			trace("onCreate: Provider " + provider + " has been selected.");
-			double lat = (location.getLatitude());
-			double lng = (location.getLongitude());
+			lat = (location.getLatitude());
+			lng = (location.getLongitude());
 			latituteField.setText(String.valueOf(lat));
 			longitudeField.setText(String.valueOf(lng));
 		} else {
@@ -583,8 +585,8 @@ public class WirelessInfo extends Activity implements LocationListener {
 
 	@Override
 	public void onLocationChanged(Location location) {
-		double lat = (location.getLatitude());
-		double lng = (location.getLongitude());
+		lat = (location.getLatitude());
+		lng = (location.getLongitude());
 		latituteField.setText(String.valueOf(lat));
 		longitudeField.setText(String.valueOf(lng));
 	}
@@ -947,6 +949,8 @@ public class WirelessInfo extends Activity implements LocationListener {
 			params.put("cellid", String.valueOf(cellID));
 			params.put("rssi", String.valueOf(ssdbm));
 			params.put("imsi", imsi);
+			params.put("lat", String.valueOf(lat));
+			params.put("lng", String.valueOf(lng));
 
 			 client.post("http://inhere.homelinux.net/test/cellinfo_post.php", params, new AsyncHttpResponseHandler() {
 					@Override
