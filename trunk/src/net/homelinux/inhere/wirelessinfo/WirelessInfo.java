@@ -69,6 +69,8 @@ public class WirelessInfo extends Activity implements LocationListener {
 	// private final static String API_KEY =
 	// "KJ7DB6kbP6UE4b5O3AskOMttTppKFGHDYuJ81J8T";
 
+	private boolean upLoadCellInfo = false;
+	private int ssdbm;
 	private ProgressDialog progressDialog;
 
 	private TelephonyManager tm;
@@ -220,9 +222,14 @@ public class WirelessInfo extends Activity implements LocationListener {
 					networkType = "GSM";
 					SignalHeading = "RSCP";
 				}
-
+				
+				String activityTypeDisplay = "Activity Type";
+				if (upLoadCellInfo == true) {
+					activityTypeDisplay = "(U) Activity Type";
+					
+				}
 				((TextView) findViewById(R.id.dataType))
-						.setText("Activity Type: "+ tm.getDataActivity());
+						.setText(activityTypeDisplay+": "+ tm.getDataActivity());
 
 				/*
 				 * Update the GUI with the current cell's info
@@ -260,6 +267,10 @@ public class WirelessInfo extends Activity implements LocationListener {
 									+ String.valueOf(TrafficStats
 											.getTotalRxBytes()) + "/"
 									+ TotalTxBytes);
+				}
+				
+				if (upLoadCellInfo == true) {
+					uploadCellInfoViaWeb(Integer.parseInt(cellid));
 				}
 			}
 		});
@@ -399,6 +410,12 @@ public class WirelessInfo extends Activity implements LocationListener {
 			break;
 		case R.id.icontext:
 			trace("onOptionsItemSelected: menu");
+			if (upLoadCellInfo == true) {
+				upLoadCellInfo = false;
+			} else {
+				upLoadCellInfo = true;
+			}
+			
 			break;
 		}
 		return true;
@@ -450,7 +467,7 @@ public class WirelessInfo extends Activity implements LocationListener {
 		 * Get the Signal strength from the provider, each time there is an
 		 * update
 		 */
-		private int ss, ber, ssdbm, cdmadbm;
+		private int ss, ber, cdmadbm;
 
 		@Override
 		public void onSignalStrengthsChanged(SignalStrength signalStrength) {
@@ -905,6 +922,55 @@ public class WirelessInfo extends Activity implements LocationListener {
 		// trace
 		// ("WirelessInfo: showFtpProgressOnScreen: Got progress report. "+val+"%");
 		status("Got progress report from FTP task. "+ val + "%");
+	}
+	
+	private void uploadCellInfoViaWeb(int cellID) {
+		ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+
+		NetworkInfo ani = cm.getActiveNetworkInfo();
+
+		if (ani != null && ani.isConnected()) {
+			/*
+			JSONObject json = new JSONObject();
+			try {
+				json.put("cellid", cellID);
+				json.put("rssi", ssdbm);
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				trace("uploadCellInfoViaWeb: "+e.getMessage());
+			}
+			*/
+            
+			final AsyncHttpClient client = new AsyncHttpClient();
+			
+			RequestParams params = new RequestParams();
+			params.put("cellid", String.valueOf(cellID));
+			params.put("rssi", String.valueOf(ssdbm));
+			params.put("imsi", imsi);
+
+			 client.post("http://inhere.homelinux.net/test/cellinfo_post.php", params, new AsyncHttpResponseHandler() {
+					@Override
+					public void onSuccess(String response) {
+						trace("uploadCellInfoViaWeb: "+response);
+					}
+				});
+			/* 
+			client.get(
+					"http://inhere.homelinux.net/test/cellinfo_post.php?",
+					new AsyncHttpResponseHandler() {
+						@Override
+						public void onSuccess(String response) {
+							trace("uploadCellInfoViaWeb: HTTP post success.");
+						}
+					});
+			*/
+		} else {
+			String strResult = "No network available!!";
+			Toast t = Toast.makeText(getApplicationContext(),
+					strResult, Toast.LENGTH_LONG);
+			t.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
+			t.show();
+		}
 	}
 
 	private void getTestLoginDetails() throws IOException {

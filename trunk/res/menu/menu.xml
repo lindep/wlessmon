@@ -9,6 +9,6 @@
 	  	android:layout_height="wrap_content"/>
 	  	
     <item android:id="@+id/icontext"
- 		android:title="Icon and text"
+ 		android:title="Enable Upload"
  		android:icon="@drawable/icon" />
 </menu>
