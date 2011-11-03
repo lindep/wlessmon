@@ -64,7 +64,7 @@ import android.net.TrafficStats;
 
 import com.loopj.android.http.*;
 
-public class WirelessInfo extends Activity implements LocationListener {
+public class WirelessInfo extends Activity {
 
 	// private final static String API_KEY =
 	// "KJ7DB6kbP6UE4b5O3AskOMttTppKFGHDYuJ81J8T";
@@ -87,7 +87,11 @@ public class WirelessInfo extends Activity implements LocationListener {
 	private TextView latituteField;
 	private TextView longitudeField;
 	private LocationManager locationManager;
+	
 	private String provider;
+	
+	private LocationManager mlocManager;
+	private LocationListener mlocListener;
 
 	private String ftpFileName;
 	private MyFtpTask mCurrentFtpTask = null;
@@ -111,12 +115,29 @@ public class WirelessInfo extends Activity implements LocationListener {
 		longitudeField = (TextView) findViewById(R.id.unknownLong);
 
 		// Get the location manager
-		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+		//locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 		// Define the criteria how to select the location provider -> use
 		// default
+		//provider = locationManager.getBestProvider(criteria, false);
+		//Location location = locationManager.getLastKnownLocation(provider);
+		
 		Criteria criteria = new Criteria();
-		provider = locationManager.getBestProvider(criteria, false);
-		Location location = locationManager.getLastKnownLocation(provider);
+        criteria.setAccuracy(Criteria.ACCURACY_FINE);
+    ////////criteria.setAccuracy(Criteria.ACCURACY_COARSE);
+        criteria.setAltitudeRequired(false);
+        criteria.setBearingRequired(false);
+        criteria.setCostAllowed(true);
+        criteria.setPowerRequirement(Criteria.POWER_HIGH); //POWER_LOW
+        //String provider = locationManager.getBestProvider(criteria, true);
+
+		
+		
+		mlocManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+		
+		provider = mlocManager.getBestProvider(criteria, true);
+		mlocListener = new MyLocationListener();
+		mlocManager.requestLocationUpdates( LocationManager.GPS_PROVIDER, 0, 0, mlocListener);
+		Location location = mlocManager.getLastKnownLocation(provider);
 		
 		verify = new VerifyService(this);
 
@@ -352,6 +373,52 @@ public class WirelessInfo extends Activity implements LocationListener {
 			}
 		});
 	}
+	
+	/*
+	@Override
+	public void onLocationChanged(Location location) {
+		lat = (location.getLatitude());
+		lng = (location.getLongitude());
+		latituteField.setText(String.valueOf(lat));
+		longitudeField.setText(String.valueOf(lng));
+	}
+*/
+	
+	
+	/* Class My Location Listener */
+
+	public class MyLocationListener implements LocationListener	{
+		@Override
+		public void onLocationChanged(Location loc)	{
+			trace("MyLocationListener: onLocationChanged event");
+			if (loc != null) {
+				lat = (loc.getLatitude());
+				lng = (loc.getLongitude());
+				latituteField.setText(String.valueOf(lat));
+				longitudeField.setText(String.valueOf(lng));
+				//loc.getLatitude();
+				//loc.getLongitude();
+				//String Text = "My current location is: Latitud = " + loc.getLatitude() + "Longitud = " + loc.getLongitude();
+			
+				//Toast.makeText( getApplicationContext(),Text,Toast.LENGTH_SHORT).show();
+			}
+		}
+
+		@Override
+		public void onProviderDisabled(String provider)	{
+			Toast.makeText( getApplicationContext(), "Gps Disabled "+ provider, Toast.LENGTH_SHORT ).show();
+		}
+	
+		@Override
+		public void onProviderEnabled(String provider) {
+			Toast.makeText( getApplicationContext(),"Gps Enabled "+ provider,Toast.LENGTH_SHORT).show();
+		}
+	
+		@Override
+		public void onStatusChanged(String provider, int status, Bundle extras)	{
+		}
+	}
+	
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -450,7 +517,11 @@ public class WirelessInfo extends Activity implements LocationListener {
 	protected void onPause() {
 		super.onPause();
 		tm.listen(MyListener, PhoneStateListener.LISTEN_NONE);
-		locationManager.removeUpdates(this);
+		//locationManager.removeUpdates(this);
+		if (mlocManager != null) {
+			mlocManager.removeUpdates(mlocListener);
+			mlocManager = null;
+		}
 	}
 
 	/* Called when the application resumes */
@@ -458,7 +529,18 @@ public class WirelessInfo extends Activity implements LocationListener {
 	protected void onResume() {
 		super.onResume();
 		tm.listen(MyListener, listenEvents);
-		locationManager.requestLocationUpdates(provider, 400, 1, this);
+		mlocManager.requestLocationUpdates( LocationManager.GPS_PROVIDER, 400, 1, mlocListener);
+		//locationManager.requestLocationUpdates(provider, 400, 1, this);
+	}
+	
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		trace("onDestroy: Upload db var = "+upLoadCellInfo);
+		if (mlocManager != null) {
+			mlocManager.removeUpdates(mlocListener);
+			mlocManager = null;
+		}
 	}
 
 	/* —————————– */
@@ -581,33 +663,6 @@ public class WirelessInfo extends Activity implements LocationListener {
 			}
 		}
 		return str;
-	}
-
-	@Override
-	public void onLocationChanged(Location location) {
-		lat = (location.getLatitude());
-		lng = (location.getLongitude());
-		latituteField.setText(String.valueOf(lat));
-		longitudeField.setText(String.valueOf(lng));
-	}
-
-	@Override
-	public void onStatusChanged(String provider, int status, Bundle extras) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void onProviderEnabled(String provider) {
-		Toast.makeText(this, "Enabled new provider " + provider,
-				Toast.LENGTH_SHORT).show();
-
-	}
-
-	@Override
-	public void onProviderDisabled(String provider) {
-		Toast.makeText(this, "Disenabled provider " + provider,
-				Toast.LENGTH_SHORT).show();
 	}
 	
 	private boolean checkAPNSettings() throws WirelessInfoException {
@@ -1199,5 +1254,29 @@ public class WirelessInfo extends Activity implements LocationListener {
 	public void trace(String msg) {
 		Log.d("WirelessInfo", WirelessInfo.class.getName()+": "+msg);
 	}
+/*
+	@Override
+	public void onLocationChanged(Location location) {
+		// TODO Auto-generated method stub
+		
+	}
 
+	@Override
+	public void onProviderDisabled(String provider) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onProviderEnabled(String provider) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onStatusChanged(String provider, int status, Bundle extras) {
+		// TODO Auto-generated method stub
+		
+	}
+*/
 }
