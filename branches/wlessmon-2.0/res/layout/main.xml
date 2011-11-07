@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+ android:orientation="vertical"
+ android:layout_width="fill_parent"
+ android:layout_height="fill_parent">
+ 
+ <LinearLayout
+	android:orientation="horizontal"
+	android:gravity="center"
+    android:layout_width="fill_parent"
+	android:layout_height="wrap_content">
+
+	 <TextView android:text="Network Type: " android:id="@+id/networktype"
+	  android:layout_width="wrap_content"
+	  android:layout_weight="1"
+	  android:layout_height="wrap_content"/>
+	  
+	  <TextView android:text="Other: " android:id="@+id/dataType"
+	  android:layout_weight="1"
+	  android:layout_width="wrap_content"
+	  android:layout_height="wrap_content"/>
+  
+  </LinearLayout>
+  
+  <LinearLayout android:id="@+id/linearLayout1"
+  		android:orientation="horizontal"
+		android:gravity="left"
+    	android:layout_width="fill_parent"
+		android:layout_height="wrap_content">
+
+	<TextView android:text="Mcc: " android:id="@+id/TextView03"
+	  android:layout_width="wrap_content"
+	  android:layout_height="wrap_content"/>
+	  
+	 <TextView android:text="CellID: " android:id="@+id/TextView01"
+	  android:layout_width="wrap_content"
+	  android:layout_height="wrap_content"/>
+
+  </LinearLayout>
+  
+	<LinearLayout android:id="@+id/linearLayoutCellinfo"
+  		android:orientation="horizontal"
+		android:gravity="left"
+    	android:layout_width="fill_parent"
+		android:layout_height="wrap_content">
+	 
+	    <TextView android:id="@+id/CellInfo"
+		  android:layout_width="wrap_content"
+		  android:layout_height="wrap_content"/>
+	    
+	</LinearLayout>
+		
+ <TextView android:text="Lac: " android:id="@+id/TextView02"
+  android:layout_width="wrap_content"
+  android:layout_height="wrap_content"/>
+
+  <TextView android:text="IMSI: " android:id="@+id/TextViewImsi"
+  android:layout_width="wrap_content"
+  android:layout_height="wrap_content"/>
+  
+  <LinearLayout android:id="@+id/linearLayout1"
+  		android:orientation="horizontal"
+		android:gravity="left"
+    	android:layout_width="fill_parent"
+		android:layout_height="wrap_content">
+		
+		<TextView android:text="Lat: " 
+			android:layout_height="wrap_content"
+			android:layout_width="wrap_content"
+			android:id="@+id/coordlat"></TextView>
+			
+		<TextView android:text="unknown" 
+			android:layout_height="wrap_content"
+			android:layout_width="wrap_content"
+			android:id="@+id/unknownLat"></TextView>
+			
+		<TextView android:layout_width="wrap_content" 
+			android:text=" Lng: " 
+			android:id="@+id/coordlong" 
+			android:layout_height="wrap_content"></TextView>
+			
+		<TextView android:text="unknown" 
+			android:layout_height="wrap_content"
+			android:layout_width="wrap_content"
+			android:id="@+id/unknownLong"></TextView>
+	</LinearLayout>
+  
+  <LinearLayout
+	android:orientation="horizontal"
+	android:gravity="center"
+    android:layout_width="fill_parent"
+	android:layout_height="wrap_content">
+	 
+    <Button android:text="Update cell" android:id="@+id/UpdateCellButton"
+        android:layout_width="fill_parent"
+        android:layout_weight="1"
+        android:layout_height="wrap_content"/>
+        
+    <Button android:text="Get web page" android:id="@+id/GetWebPageButton"
+        android:layout_weight="1"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"/>
+        
+    <Button android:text="Get Login Details" android:id="@+id/GetLoginButton"
+        android:layout_weight="1"
+        android:layout_width="fill_parent"
+        android:onClick="onClickStartGetLogin"
+        android:layout_height="wrap_content"/>
+        
+   </LinearLayout>
+        
+     <LinearLayout
+		android:orientation="horizontal"
+		android:gravity="center"
+	    android:layout_width="fill_parent"
+		android:layout_height="wrap_content">
+        
+    <Button android:text="Start FTP Test" 
+        android:id="@+id/TestFTP"
+        android:layout_weight="1"
+        android:layout_width="fill_parent"
+        android:onClick="onClickStartFTP"
+        android:layout_height="wrap_content" />
+        
+    <Button android:text="Start Internal FTP Test" 
+        android:id="@+id/TestFTP"
+        android:layout_weight="1"
+        android:layout_width="fill_parent"
+        android:onClick="onClickStartInternalFTP"
+        android:layout_height="wrap_content" />
+        
+    <Button android:text="Stop FTP Test" 
+        android:id="@+id/StopFTP"
+        android:layout_weight="1"
+        android:layout_width="fill_parent"
+        android:onClick="onClickStopFTP"
+        android:layout_height="wrap_content" />
+        
+    </LinearLayout>
+	  
+  <TextView android:text="Stats: " android:id="@+id/txtNetStats"
+  android:layout_width="wrap_content"
+  android:layout_height="wrap_content"/>
+  
+  <TextView android:text="Stats: " android:id="@+id/txtWebNetStats"
+  android:layout_width="wrap_content"
+  android:layout_height="wrap_content"/>
+	  
+  
+  <TextView android:text="Other: " android:id="@+id/other_txt1"
+  android:layout_width="wrap_content"
+  android:layout_height="wrap_content"/>
+  
+  <TextView android:text="Neighbors: " android:id="@+id/neighboring"
+  android:layout_width="wrap_content"
+  android:layout_height="wrap_content"/>
+  
+  <TextView android:text="Status: " android:id="@+id/textStatus"
+  android:layout_width="wrap_content"
+  android:layout_height="wrap_content"/>
+  
+  <ScrollView android:text="Text: " android:layout_width="fill_parent"
+		android:layout_height="fill_parent">
+		<TextView android:id="@+id/webPageText"
+            android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+            android:textColor="#FFFFFF" />
+        
+	</ScrollView>
+  
+</LinearLayout>
