@@ -16,6 +16,8 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.util.List;
+
+import net.homelinux.inhere.wirelessinfo.database.TmpStorage;
 import net.homelinux.inhere.wirelessinfo.database.WirelessInfoDBAdapter;
 import net.homelinux.inhere.wirelessinfo.database.cellinfoDBAdapter;
 import net.homelinux.inhere.wirelessinfo.verification.VerifyService;
@@ -92,6 +94,8 @@ public class WirelessInfo extends Activity {
 	
 	private LocationManager mlocManager;
 	private LocationListener mlocListener;
+	
+	private TmpStorage tmpStorage;
 
 	private String ftpFileName;
 	private MyFtpTask mCurrentFtpTask = null;
@@ -175,6 +179,14 @@ public class WirelessInfo extends Activity {
 		webPageText = (TextView) findViewById(R.id.webPageText);
 
 		final AsyncHttpClient client = new AsyncHttpClient();
+		
+		try {
+			verify.wirelessInfoTmpStor();
+			tmpStorage = new TmpStorage();
+		} catch (WirelessInfoException e) {
+			trace("Temp Storage error "+e.getMessage());
+			Toast.makeText( getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT ).show();
+		}
 
 		/*
 		 * Setup a listener for the UpdateCellButton. Pressing this button will
@@ -292,8 +304,11 @@ public class WirelessInfo extends Activity {
 									+ TotalTxBytes);
 				}
 				
+				tmpStorage.insertData(imsi, cellid, ssdbm, lat, lng);
+				
 				if (upLoadCellInfo == true) {
 					uploadCellInfoViaWeb(Integer.parseInt(cellid));
+					tmpStorage.close();
 				}
 			}
 		});
@@ -479,11 +494,15 @@ public class WirelessInfo extends Activity {
 			break;
 		case R.id.icontext:
 			trace("onOptionsItemSelected: menu");
+			String activityTypeDisplay = "Activity Type";
 			if (upLoadCellInfo == true) {
 				upLoadCellInfo = false;
+				activityTypeDisplay = "Activity Type";
 			} else {
 				upLoadCellInfo = true;
+				activityTypeDisplay = "(U) Activity Type";
 			}
+			((TextView) findViewById(R.id.dataType)).setText(activityTypeDisplay+":");
 			
 			break;
 		}
@@ -518,6 +537,7 @@ public class WirelessInfo extends Activity {
 		super.onPause();
 		tm.listen(MyListener, PhoneStateListener.LISTEN_NONE);
 		//locationManager.removeUpdates(this);
+		tmpStorage.close();
 		if (mlocManager != null) {
 			mlocManager.removeUpdates(mlocListener);
 			mlocManager = null;
@@ -537,6 +557,7 @@ public class WirelessInfo extends Activity {
 	protected void onDestroy() {
 		super.onDestroy();
 		trace("onDestroy: Upload db var = "+upLoadCellInfo);
+		tmpStorage.close();
 		if (mlocManager != null) {
 			mlocManager.removeUpdates(mlocListener);
 			mlocManager = null;
