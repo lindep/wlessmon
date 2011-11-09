@@ -308,7 +308,7 @@ public class WirelessInfo extends Activity {
 				
 				if (upLoadCellInfo == true) {
 					uploadCellInfoViaWeb(Integer.parseInt(cellid));
-					tmpStorage.close();
+					//tmpStorage.close();
 				}
 			}
 		});
