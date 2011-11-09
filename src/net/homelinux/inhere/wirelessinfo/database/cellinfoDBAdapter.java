@@ -38,6 +38,22 @@ public class cellinfoDBAdapter {
 	public void close() {
 		dbHelper.close();
 	}
+	
+	/**
+     * Select All returns a cursor
+     * @return the cursor for the DB selection
+     */
+    public Cursor cursorSelectAll() {
+        Cursor cursor = database.query(
+        		DATABASE_TABLE, // Table Name
+                new String[] { KEY_ROWID, KEY_CELLID, KEY_SITENAME }, // Columns to return
+                null,       // SQL WHERE
+                null,       // Selection Args
+                null,       // SQL GROUP BY 
+                null,       // SQL HAVING
+                KEY_CELLID);    // SQL ORDER BY
+        return cursor;
+    }
 
 	/**
 	 * Create a new info If the info is successfully created return the new
@@ -162,6 +178,37 @@ public class cellinfoDBAdapter {
 		      }
 		      return list;
 	}
+	
+    /**
+     * Select All that returns an ArrayList
+     * @return the ArrayList for the DB selection
+     * public class Friend {
+    	public String id;
+    	public String name;
+    	public byte[] picture;
+    	public Bitmap pictureBitmap;;
+	}
+     */
+	/*
+    public ArrayList<Friend> listSelectAll() {
+        ArrayList<Friend> list = new ArrayList<Friend>();
+        Cursor cursor = this.db.query(TABLE_NAME, 
+        		new String[] { "fid", "name" }, 
+        		null, null, null, null, "name");
+        if (cursor.moveToFirst()) {
+            do {
+                Friend f = new Friend();
+                f.id = cursor.getString(0);
+                f.name = cursor.getString(1);
+                list.add(f);
+            } while (cursor.moveToNext());
+        }
+        if (cursor != null && !cursor.isClosed()) {
+            cursor.close();
+        }
+        return list;
+    }
+    */
 	
 	public int getDbInfo() {
 		final String SQL_STATEMENT = "SELECT count(*) as _id FROM "+DATABASE_TABLE;	
