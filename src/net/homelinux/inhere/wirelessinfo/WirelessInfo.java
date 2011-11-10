@@ -505,6 +505,12 @@ public class WirelessInfo extends Activity {
 			((TextView) findViewById(R.id.dataType)).setText(activityTypeDisplay+":");
 			
 			break;
+		case R.id.sRecord:
+			trace("onOptionsItemSelected: Start recording");
+			break;
+		case R.id.eRecord:
+			trace("onOptionsItemSelected: Stop recording");
+			break;
 		}
 		return true;
 	}
