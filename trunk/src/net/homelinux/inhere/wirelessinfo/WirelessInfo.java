@@ -549,8 +549,13 @@ public class WirelessInfo extends Activity {
 	protected void onResume() {
 		super.onResume();
 		tm.listen(MyListener, listenEvents);
-		mlocManager.requestLocationUpdates( LocationManager.GPS_PROVIDER, 400, 1, mlocListener);
-		//locationManager.requestLocationUpdates(provider, 400, 1, this);
+		if (mlocManager != null) {
+			mlocManager.requestLocationUpdates( LocationManager.GPS_PROVIDER, 400, 1, mlocListener);
+			//locationManager.requestLocationUpdates(provider, 400, 1, this);
+		}
+		else {
+			trace("onResume: Location manager = null, can not request locaion updates");
+		}
 	}
 	
 	@Override
