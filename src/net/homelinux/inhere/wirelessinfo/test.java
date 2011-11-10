@@ -51,7 +51,7 @@ public class test extends Activity  {
 	private Button connectFtpButton;
 	private ToggleButton ftpActionButton;
 	LoginDetails serverLogin = null;
-	LoginDetails[] serverLoginObj = new LoginDetails[2];
+	LoginDetails[] serverLoginObj; // = new LoginDetails[];
 	private ThrPutTest mCurrentThrPutTask = null;
 	
 	private WirelessInfoDBAdapter dbAdapter;
@@ -78,27 +78,30 @@ public class test extends Activity  {
 	    spinner.setAdapter(adapter);
 	    
 	    spinner.setOnItemSelectedListener(new MyOnItemSelectedListener());
-	    
-	    
+
 	    Intent intent = getIntent();
 	    intent.getParcelableExtra("serverLogin");
-	    intent.getParcelableExtra("serverLogin");
+	    //intent.getParcelableExtra("serverLogin");
 	    
 	    //LoginDetails serverLoginObj = (LoginDetails)this.getIntent().getParcelableExtra("serverLogin");
 	    
 	    dbAdapter = new WirelessInfoDBAdapter(this);
+	    cellInfoDbA = new cellinfoDBAdapter(this);
 	    try {
 	    	dbAdapter.open();
 	    	trace("Opened DB");
 	    	fillSpinner();
-	    	spinServerName.setOnItemSelectedListener(new MyServerNameItemSelectedListener());	    	
+	    	spinServerName.setOnItemSelectedListener(new MyServerNameItemSelectedListener());
+	    	populateServerLoginDetails(dbAdapter);
+	    	setLoginDetailsBasedOnSpinner();
+	        
 	    	dbAdapter.close();
 	    } catch (SQLException e) {
 	    	trace("onCreate: Fail to open db "+e.getMessage());
 	    	dbAdapter.close();
 	    }
 	    
-	    
+	    /*
 	    Bundle b = this.getIntent().getExtras();
 		if (b.getBoolean("hostStatus")) {
 			serverLogin = new LoginDetails();
@@ -111,8 +114,32 @@ public class test extends Activity  {
 		} else {
 			Toast.makeText(this, "Please set Login Details first!", Toast.LENGTH_SHORT).show();
 		}
-		
-		cellInfoDbA = new cellinfoDBAdapter(this);
+		*/
+	}
+	
+	private void populateServerLoginDetails(WirelessInfoDBAdapter db) {
+		db.fetchAllServerInfos();
+		Cursor cursor = db.fetchAllServerInfos();
+    	startManagingCursor(cursor);
+    	if (cursor.getCount() > 0) {
+    		trace("populateServerLoginDetails: Found "+cursor.getCount()+" Login details in DB");
+    		serverLoginObj = new LoginDetails[cursor.getCount()];   		
+    		if (cursor.moveToFirst()) {
+    			int i = 0;
+	         do {
+	        	 trace("populateServerLoginDetails: Adding host ("+cursor.getString(1)+") to serverLogin Object.");
+	        	 serverLoginObj[i] = new LoginDetails();
+	        	 serverLoginObj[i].setHost(cursor.getString(1));
+	        	 serverLoginObj[i].setPort(cursor.getInt(2));
+	        	 serverLoginObj[i].setId(cursor.getString(3));
+	        	 serverLoginObj[i].setPasswd(cursor.getString(4));
+				i = i + 1;
+	         } while (cursor.moveToNext() && i < 20);
+		      }
+		      if (cursor != null && !cursor.isClosed()) {
+		         cursor.close();
+		      }
+    	}
 	}
 	
 	private void fillSpinner() {
@@ -182,7 +209,8 @@ public class test extends Activity  {
 	    	
 	    	int key_rowid = cursor.getInt(cursor.getColumnIndex(WirelessInfoDBAdapter.KEY_ROWID));
 	    	String host = cursor.getString(cursor.getColumnIndex(WirelessInfoDBAdapter.KEY_HOSTNAME));
-	      trace("Spinner, pos = "+pos+", server = " +host+", id = "+id+", row_id = "+key_rowid);
+	    	trace("Spinner, pos = "+pos+", server = " +host+", id = "+id+", row_id = "+key_rowid);
+	    	setLoginDetailsBasedOnSpinner();
 	    }
 	    @SuppressWarnings("rawtypes")
 		public void onNothingSelected(AdapterView parent) {
@@ -231,9 +259,31 @@ public class test extends Activity  {
 		
 	}
 	
-	public void onClickThrputTest(View v) {
-		trace("WirelessInfo: onClickThrputTest: Start.");
+	private boolean setLoginDetailsBasedOnSpinner() {
+		Cursor cursor = (Cursor) spinServerName.getSelectedItem();
+		//int key_rowid = cursor.getInt(cursor.getColumnIndex(WirelessInfoDBAdapter.KEY_ROWID));
+		String sName = cursor.getString(cursor.getColumnIndex(WirelessInfoDBAdapter.KEY_HOSTNAME));
 		
+		for(int i = 0; i < serverLoginObj.length; i++) {
+			if (sName.equalsIgnoreCase(serverLoginObj[i].getHost())) {
+				serverLogin = serverLoginObj[i];
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	public void onClickThrputTest(View v) {
+		trace("onClickThrputTest: Start.");
+		
+		if (serverLogin != null) {
+			trace("onClickThrputTest: Doing Throughput test to "+serverLogin.getHost());
+			ThrPutTest ft = new ThrPutTest(this, "filename", serverLogin);
+	    	ft.execute("filename");
+		}
+		
+		/*
 		//spinServerName.getSelectedItemPosition();
 		Cursor cursor = (Cursor) spinServerName.getSelectedItem();
 		int key_rowid = cursor.getInt(cursor.getColumnIndex(WirelessInfoDBAdapter.KEY_ROWID));
@@ -269,7 +319,8 @@ public class test extends Activity  {
 	    	trace("onClickDBTest: Fail to open db "+e.getMessage());
 	    	dbAdapter.close();
 	    }
-		
+		*/
+	    /*
 		Bundle b = this.getIntent().getExtras();
 		if (b.getBoolean("hostStatus")) {
 			LoginDetails serverLoginFromIntent = new LoginDetails();
@@ -282,7 +333,7 @@ public class test extends Activity  {
 		} else {
 			Toast.makeText(this, "Please set Login Details first!", Toast.LENGTH_SHORT).show();
 		}
-		
+		*/
 	}
 	
 	public void onClickDBTest(View v) {
@@ -306,7 +357,7 @@ public class test extends Activity  {
 			cellInfoDbA.open();
 			int records = cellInfoDbA.getDbInfo();
 	    	trace("onClickDBTest: "+records+" in cell info DB");
-	    	status("Founds "+records+" cell info records");
+	    	status("Found "+records+" cell info records");
 	    	cellInfoDbA.close();
 	    } catch (SQLException e) {
 	    	trace("purgeCellInfo: Fail to open db "+e.getMessage());
