@@ -540,7 +540,7 @@ public class WirelessInfo extends Activity {
 		tmpStorage.close();
 		if (mlocManager != null) {
 			mlocManager.removeUpdates(mlocListener);
-			mlocManager = null;
+			//mlocManager = null;
 		}
 	}
 
