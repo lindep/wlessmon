@@ -64,6 +64,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.net.TrafficStats;
 
+import com.google.gson.Gson;
 import com.loopj.android.http.*;
 
 public class WirelessInfo extends Activity {
@@ -72,6 +73,7 @@ public class WirelessInfo extends Activity {
 	// "KJ7DB6kbP6UE4b5O3AskOMttTppKFGHDYuJ81J8T";
 
 	private boolean upLoadCellInfo = false;
+	private boolean cellInfoRecording = false;
 	private int ssdbm;
 	private ProgressDialog progressDialog;
 	
@@ -134,7 +136,7 @@ public class WirelessInfo extends Activity {
         criteria.setPowerRequirement(Criteria.POWER_HIGH); //POWER_LOW
         //String provider = locationManager.getBestProvider(criteria, true);
 
-		
+        Gson gson = new Gson();
 		
 		mlocManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 		
@@ -180,13 +182,7 @@ public class WirelessInfo extends Activity {
 
 		final AsyncHttpClient client = new AsyncHttpClient();
 		
-		try {
-			verify.wirelessInfoTmpStor();
-			tmpStorage = new TmpStorage();
-		} catch (WirelessInfoException e) {
-			trace("Temp Storage error "+e.getMessage());
-			Toast.makeText( getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT ).show();
-		}
+		
 
 		/*
 		 * Setup a listener for the UpdateCellButton. Pressing this button will
@@ -272,7 +268,7 @@ public class WirelessInfo extends Activity {
 				String cellid = getCellId(cid, networkType);
 				String cellinfo;
 				try {
-					cellinfo = getCellById(Integer.parseInt(cellid));
+					cellinfo = getCellInfoById(Integer.parseInt(cellid));
 				} catch (WirelessInfoException e) {
 					cellinfo = "";
 				}
@@ -304,7 +300,9 @@ public class WirelessInfo extends Activity {
 									+ TotalTxBytes);
 				}
 				
-				tmpStorage.insertData(imsi, cellid, ssdbm, lat, lng);
+				if (cellInfoRecording) {
+					tmpStorage.insertData(imsi, cellid, ssdbm, lat, lng);
+				}
 				
 				if (upLoadCellInfo == true) {
 					uploadCellInfoViaWeb(Integer.parseInt(cellid));
@@ -507,9 +505,22 @@ public class WirelessInfo extends Activity {
 			break;
 		case R.id.sRecord:
 			trace("onOptionsItemSelected: Start recording");
+			try {
+				verify.wirelessInfoTmpStor();
+				tmpStorage = new TmpStorage(true);
+			} catch (WirelessInfoException e) {
+				trace("Temp Storage error "+e.getMessage());
+				Toast.makeText( getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT ).show();
+			}
+			cellInfoRecording = true;
+			((TextView) findViewById(R.id.recordStatus)).setText("(R) ");
+			
 			break;
 		case R.id.eRecord:
 			trace("onOptionsItemSelected: Stop recording");
+			cellInfoRecording = false;
+			tmpStorage.close();
+			((TextView) findViewById(R.id.recordStatus)).setText("");
 			break;
 		}
 		return true;
@@ -543,7 +554,7 @@ public class WirelessInfo extends Activity {
 		super.onPause();
 		tm.listen(MyListener, PhoneStateListener.LISTEN_NONE);
 		//locationManager.removeUpdates(this);
-		tmpStorage.close();
+		//tmpStorage.close();
 		if (mlocManager != null) {
 			mlocManager.removeUpdates(mlocListener);
 			//mlocManager = null;
@@ -555,11 +566,12 @@ public class WirelessInfo extends Activity {
 	protected void onResume() {
 		super.onResume();
 		tm.listen(MyListener, listenEvents);
+		//tmpStorage = new TmpStorage(false);
+		//mlocManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 		if (mlocManager != null) {
 			mlocManager.requestLocationUpdates( LocationManager.GPS_PROVIDER, 400, 1, mlocListener);
 			//locationManager.requestLocationUpdates(provider, 400, 1, this);
-		}
-		else {
+		} else {
 			trace("onResume: Location manager = null, can not request locaion updates");
 		}
 	}
@@ -572,6 +584,7 @@ public class WirelessInfo extends Activity {
 		if (mlocManager != null) {
 			mlocManager.removeUpdates(mlocListener);
 			mlocManager = null;
+			trace("onDestroy: NULL mlocManager");
 		}
 	}
 
@@ -594,8 +607,29 @@ public class WirelessInfo extends Activity {
 			ber = signalStrength.getGsmBitErrorRate();
 
 			ssdbm = getRSSI(ss);
+			
+			mobileLocation = (GsmCellLocation) tm.getCellLocation();
+			cid = mobileLocation.getCid();
+			if (tm.getNetworkType() == TelephonyManager.NETWORK_TYPE_UMTS
+					|| tm.getNetworkType() == TelephonyManager.NETWORK_TYPE_HSDPA) {
+				cellPadding = 8;
+				networkType = "UMTS";
+				SignalHeading = "RSSI";
+				/*
+				 * cid = cid - 65536;
+				 */
+			} else {
+				cellPadding = 4;
+				networkType = "GSM";
+				SignalHeading = "RSCP";
+			}
+			String cellid = getCellId(cid, networkType);
+			
+			if (cellInfoRecording) {
+				tmpStorage.insertData(imsi, cellid, ssdbm, lat, lng);
+			}
 
-			((TextView) findViewById(R.id.other_txt1)).setText(SignalHeading
+			((TextView) findViewById(R.id.other_txt1)).setText(cellid+": "+SignalHeading
 					+ ": -" + ssdbm + "dBm");
 		}
 		
@@ -1239,11 +1273,11 @@ public class WirelessInfo extends Activity {
 	 * @return String
 	 */
 	
-	public String getCellById(int cellid) throws WirelessInfoException {
+	public String getCellInfoById(int cellid) throws WirelessInfoException {
 		String cellname = "", sitename = "";
-		trace("getCellById: start.");
+		trace("getCellInfoById: start.");
 		cellInfoDbA = new cellinfoDBAdapter(this);
-		trace("getCellById: got value from edittext = "+cellid);
+		trace("getCellInfoById: got value from edittext = "+cellid);
 		if (! (cellid > 0 && cellid < 65535)) {
 			throw new WirelessInfoException("Invalid cell ID");
 		}
@@ -1277,6 +1311,26 @@ public class WirelessInfo extends Activity {
 		}
 		return cellname+", "+sitename;
 	}
+	/*
+	private boolean startRecording() {
+		new Thread(new Runnable() {
+			public void run() {
+				try {
+					tmpStorage.insertData(imsi, cellid, ssdbm, lat, lng);
+				} catch (IOException e) {
+					status("setLoginDetails: Failure. " + e.getMessage());
+					try {
+						throw new WirelessInfoException("Failed to access cell Info DB!");
+					} catch (WirelessInfoException e1) {
+						e1.printStackTrace();
+						trace("loadCellInfoLocal: "+e1.getMessage());
+					}
+				}
+			}
+		}).start();
+		return true;
+	}
+	*/
 	
 	public void status(String message) {
 		TextView tv = (TextView) findViewById(R.id.textStatus);
