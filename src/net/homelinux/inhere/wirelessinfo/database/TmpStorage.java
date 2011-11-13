@@ -27,13 +27,20 @@ public class TmpStorage {
 	private static final String CREATE_TABLE_CELLSTATS = "CREATE TABLE IF NOT EXISTS "+TABLE_TABLE+" (_id integer primary key autoincrement, "
 		+ "imsi text not null, cellid integer not null, rssi integer not null, lat real not null, lng real not null);";
 
-	public TmpStorage() {
+	/**
+	* Create temporary storage (new or update)
+	*/
+	public TmpStorage(boolean createNew) {
 		
 		stPathToDB = android.os.Environment.getExternalStorageDirectory().toString()+"/wirelessinfo/"+DATABASE_FILE;
 		if(createDirIfNotExists(stPathToDB)) {
 			dbFileReady = true;
 			
-			openTmpStorForWriting();
+			if (createNew) {
+				openTmpStorForWriting();
+			} else {
+				openTmpStorForUpdate();
+			}
 		}
 		
 	}
@@ -67,6 +74,20 @@ public class TmpStorage {
 		}
 	}
 	
+	public void openTmpStorForUpdate() {
+		File dbfile = new File( stPathToDB );
+		try {
+			myDB = SQLiteDatabase.openOrCreateDatabase(dbfile, null);
+			trace("openTmpStorForUpdate: DB open");
+			
+			/* Create a Table in the Database. */
+			myDB.execSQL(CREATE_TABLE_CELLSTATS);
+		} catch (Exception e) {
+			   trace("Error "+e);
+			   //Toast.makeText( this, "Can not create DB for recording "+e, Toast.LENGTH_SHORT ).show();
+		}
+	}
+	
 	public void openTmpStorForWriting() {
 		File dbfile = new File( stPathToDB );
 		try {
@@ -90,6 +111,7 @@ public class TmpStorage {
     }
     
     public void close() {
+    	trace("close: Closing DB");
     	myDB.close();
 	}
     

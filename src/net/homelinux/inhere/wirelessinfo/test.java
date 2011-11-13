@@ -50,8 +50,10 @@ public class test extends Activity  {
 	@SuppressWarnings("unused")
 	private Button connectFtpButton;
 	private ToggleButton ftpActionButton;
+	
 	LoginDetails serverLogin = null;
 	LoginDetails[] serverLoginObj; // = new LoginDetails[];
+	
 	private ThrPutTest mCurrentThrPutTask = null;
 	
 	private WirelessInfoDBAdapter dbAdapter;
