@@ -1,6 +1,8 @@
 package net.homelinux.inhere.wirelessinfo.database;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
 import android.content.ContentValues;
 import android.database.Cursor;
@@ -24,11 +26,11 @@ public class TmpStorage {
 	public static final String KEY_LAT = "lat";
 	public static final String KEY_LNG = "lng";
 	
-	private static final String CREATE_TABLE_CELLSTATS = "CREATE TABLE IF NOT EXISTS "+TABLE_TABLE+" (_id integer primary key autoincrement, "
+	private static final String CREATE_TABLE_CELLSTATS = "CREATE TABLE IF NOT EXISTS "+TABLE_TABLE+" (_id integer primary key autoincrement, timeEnter DATE,"
 		+ "imsi text not null, cellid integer not null, rssi integer not null, lat real not null, lng real not null);";
 
 	/**
-	* Create temporary storage (new or update)
+	* Create temporary storage (true = new or false = update)
 	*/
 	public TmpStorage(boolean createNew) {
 		
@@ -66,9 +68,13 @@ public class TmpStorage {
 	*/
 	public void insertData(String imsi, String cellid, int rssi, double lat, double lng) {
 		   /* Insert data to a Table*/
+		Calendar c = Calendar.getInstance();
+        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String formattedDate = df.format(c.getTime());
+        
 		try {
-		   myDB.execSQL("INSERT INTO "+ TABLE_TABLE + " (imsi, cellid, rssi, lat, lng)" + " VALUES ('"+imsi+"', "+Integer.parseInt(cellid)+", "+rssi+", "+lat+", "+lng+");");
-		   trace("insertData: INSERT INTO "+ TABLE_TABLE + " (cellid, rssi, lat, lng)" + " VALUES ('"+imsi+"', "+cellid+", "+rssi+", "+lat+", "+lng+");");
+		   myDB.execSQL("INSERT INTO "+ TABLE_TABLE + " (timeEnter, imsi, cellid, rssi, lat, lng)" + " VALUES ('"+formattedDate+"', '"+imsi+"', "+Integer.parseInt(cellid)+", "+rssi+", "+lat+", "+lng+");");
+		   trace("insertData: INSERT INTO "+ TABLE_TABLE + " (timeEnter, cellid, rssi, lat, lng)" + " VALUES ('"+formattedDate+"','"+imsi+"', "+cellid+", "+rssi+", "+lat+", "+lng+");");
 		} catch (SQLException e) {
 			trace ("insertData: "+e.getMessage());
 		}
