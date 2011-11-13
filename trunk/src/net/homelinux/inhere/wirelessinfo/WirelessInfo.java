@@ -580,7 +580,9 @@ public class WirelessInfo extends Activity {
 	protected void onDestroy() {
 		super.onDestroy();
 		trace("onDestroy: Upload db var = "+upLoadCellInfo);
-		tmpStorage.close();
+		if (tmpStorage != null) {
+			tmpStorage.close();
+		}
 		if (mlocManager != null) {
 			mlocManager.removeUpdates(mlocListener);
 			mlocManager = null;
