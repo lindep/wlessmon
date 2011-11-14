@@ -341,6 +341,7 @@ public class test extends Activity  {
 	public void onClickDBTest(View v) {
 		
 		dbAdapter = new WirelessInfoDBAdapter(this);
+		String info = "";
 	    try {
 	    	dbAdapter.open();
 	    	trace("Opened DB");
@@ -348,6 +349,7 @@ public class test extends Activity  {
 	    	for (String name : names) {
 	    		trace("onClickDBTest: Found hostname = "+name);
 	    	}
+	    	info = "Found "+names.size()+" records in Host tabel";
 	    	dbAdapter.close();
 	    } catch (SQLException e) {
 	    	trace("onClickDBTest: Fail to open db "+e.getMessage());
@@ -359,12 +361,17 @@ public class test extends Activity  {
 			cellInfoDbA.open();
 			int records = cellInfoDbA.getDbInfo();
 	    	trace("onClickDBTest: "+records+" in cell info DB");
-	    	status("Found "+records+" cell info records");
+	    	//status("Found "+records+" cell info records");
+	    	info = info+", Found "+records+" cell info records";
 	    	cellInfoDbA.close();
 	    } catch (SQLException e) {
 	    	trace("purgeCellInfo: Fail to open db "+e.getMessage());
 	    	cellInfoDbA.close();
 	    }
+	    
+	    UploadData up = new UploadData();
+	    info = info+", Found "+up.size()+" stats info records";
+	    status(info);
 	}
 	
 	public void onClickftpAction(View v) {
@@ -548,6 +555,26 @@ public class test extends Activity  {
 		}
 	}
 	
+	private boolean loadDriveTest() throws WirelessInfoException {
+		
+		progressDialog = ProgressDialog.show(this, "Please wait....",
+		"Retrieving Cell Info Details");
+		
+		new Thread(new Runnable() {
+			public void run() {
+				
+				UploadData up = new UploadData();
+				try {
+					up.uploadDriveTestViaWeb();
+					progressDialog.dismiss();
+				} catch (WirelessInfoException e) {
+					status("setLoginDetails: Failure. " + e.getMessage());
+				}
+			}
+		}).start();
+		return true;
+	}
+	
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		MenuInflater inflater = getMenuInflater();
@@ -578,8 +605,13 @@ public class test extends Activity  {
 				trace("onOptionsItemSelected: "+e.getMessage());
 			}
 			break;
-		case R.id.icontext:
-			trace("onOptionsItemSelected: menu");
+		case R.id.mUploadDriveTest:
+			trace("onOptionsItemSelected: Upload Drive test data Menu");
+			try {
+				loadDriveTest();
+			} catch (WirelessInfoException e) {
+				trace("onOptionsItemSelected: "+e.getMessage());
+			}
 			break;
 		}
 		return true;

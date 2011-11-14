@@ -4,6 +4,8 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
+import net.homelinux.inhere.wirelessinfo.verification.WirelessInfoException;
+
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.SQLException;
@@ -14,15 +16,15 @@ import android.widget.Toast;
 public class TmpStorage {
 	private SQLiteDatabase myDB = null;
 	private static final String DATABASE_FILE = "tmpstor.db";
-	private static final String DATABASE_TABLE = "tmpstor";
 	private static final String TABLE_TABLE = "rssi";
 	private String stPathToDB;
 	private boolean dbFileReady = false;
 	
-	public static final String KEY_ROWID = "_id";
-	public static final String KEY_RECORDID = "recordid";
-	public static final String KEY_RECORDTIME = "recordtime";
+	public static final String KEY_ROWID = "_id"; // KEY_ROWID, KEY_IMSI, KEY_TIMEENTER, KEY_CELLID, KEY_RSSI, KEY_LAT, KEY_LNG
+	public static final String KEY_IMSI = "imsi";
+	public static final String KEY_TIMEENTER = "timeEnter";
 	public static final String KEY_CELLID = "cellid";
+	public static final String KEY_RSSI = "rssi";
 	public static final String KEY_LAT = "lat";
 	public static final String KEY_LNG = "lng";
 	
@@ -108,6 +110,32 @@ public class TmpStorage {
 			   //Toast.makeText( this, "Can not create DB for recording "+e, Toast.LENGTH_SHORT ).show();
 		}
 	}  
+	
+	/**
+     * Select All returns a cursor
+     * @return the cursor for the DB selection
+     * return KEY_IMSI, KEY_TIMEENTER, KEY_CELLID, KEY_RSSI, KEY_LAT, KEY_LNG
+     */
+    public Cursor SelectAll() throws WirelessInfoException {
+    	Cursor cursor;
+    	try {
+	        cursor = myDB.query(
+	        		TABLE_TABLE, // Table Name
+	                new String[] { KEY_IMSI, KEY_TIMEENTER, KEY_CELLID, KEY_RSSI, KEY_LAT, KEY_LNG }, // Columns to return
+	                null,       // SQL WHERE
+	                null,       // Selection Args
+	                null,       // SQL GROUP BY 
+	                null,       // SQL HAVING
+	                KEY_ROWID);    // SQL ORDER BY
+	        if (cursor != null) {
+	        	cursor.moveToFirst();
+			}
+	       
+    	} catch (SQLException e) {
+    		throw new WirelessInfoException(e.getMessage()); 
+    	}
+    	return cursor;
+    }
 
     // Destructor
     public void finalize() {
