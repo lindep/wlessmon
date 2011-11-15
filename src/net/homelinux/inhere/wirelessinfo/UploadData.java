@@ -33,7 +33,7 @@ public class UploadData {
 			int numRecords = cursor.getCount();
 			if (numRecords > 0) {
 	    		statsObj = new CellStatsObject[numRecords];
-	    		trace("UploadData: Found "+cursor.getCount()+" cell stats data");
+	    		trace("UploadData: Found "+numRecords+" cell stats data");
 	    		if (cursor.moveToFirst()) {
 	    			int i = 0;
 	    			trace("UploadData: Adding index = "+i+" for "+cursor.getString(4)+" to object");
@@ -43,8 +43,10 @@ public class UploadData {
 		        	 statsObj[i].timeEnter =  cursor.getString(1);
 		        	 statsObj[i].cellid =  cursor.getString(2);
 		        	 statsObj[i].rssi =  cursor.getString(3);
-		        	 statsObj[i].lat =  cursor.getString(4);
-		        	 statsObj[i].lng =  cursor.getString(5);
+		        	 double lat = cursor.getDouble(4);
+		        	 double lng = cursor.getDouble(5);
+		        	 statsObj[i].lat =  String.valueOf(lat);
+		        	 statsObj[i].lng =  String.valueOf(lng);
 					i = i + 1;
 		         } while (cursor.moveToNext());
 			      }
@@ -74,12 +76,11 @@ public class UploadData {
 			String json = gsona.toJson(statsObj);
 			
 			HttpClient client = new DefaultHttpClient();
-			HttpPost post = new HttpPost("http://inhere.homelinux.net/test/t_json.php");
+			HttpPost post = new HttpPost("http://inhere.homelinux.net/test/uploaddata.php");
 			try {
 				List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(1);
 				nameValuePairs.add(new BasicNameValuePair("json", json));
-				nameValuePairs.add(new BasicNameValuePair("id",
-						"53024"));
+				nameValuePairs.add(new BasicNameValuePair("id",	"53024"));
 				post.setEntity(new UrlEncodedFormEntity(nameValuePairs));
 	 
 				HttpResponse response = client.execute(post);
