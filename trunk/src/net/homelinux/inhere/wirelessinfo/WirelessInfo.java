@@ -17,6 +17,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.util.List;
 
+import net.homelinux.inhere.wirelessinfo.database.IntTmpStoreDBAdapter;
 import net.homelinux.inhere.wirelessinfo.database.TmpStorage;
 import net.homelinux.inhere.wirelessinfo.database.WirelessInfoDBAdapter;
 import net.homelinux.inhere.wirelessinfo.database.cellinfoDBAdapter;
@@ -88,6 +89,7 @@ public class WirelessInfo extends Activity {
 
 	private TextView webPageText;
 
+	private String locationType = "network";
 	private TextView latituteField;
 	private TextView longitudeField;
 	private LocationManager locationManager;
@@ -111,6 +113,7 @@ public class WirelessInfo extends Activity {
 	
 	private WirelessInfoDBAdapter dbAdapter;
 	private cellinfoDBAdapter cellInfoDbA;
+	private IntTmpStoreDBAdapter intTmpStoreDbA;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -142,7 +145,8 @@ public class WirelessInfo extends Activity {
 		
 		provider = mlocManager.getBestProvider(criteria, true);
 		mlocListener = new MyLocationListener();
-		mlocManager.requestLocationUpdates( LocationManager.GPS_PROVIDER, 0, 0, mlocListener);
+		// Start when activating recording and stop when recording end.
+		//mlocManager.requestLocationUpdates( LocationManager.GPS_PROVIDER, 0, 0, mlocListener);
 		Location location = mlocManager.getLastKnownLocation(provider);
 		
 		verify = new VerifyService(this);
@@ -419,12 +423,12 @@ public class WirelessInfo extends Activity {
 
 		@Override
 		public void onProviderDisabled(String provider)	{
-			Toast.makeText( getApplicationContext(), "Gps Disabled "+ provider, Toast.LENGTH_SHORT ).show();
+			Toast.makeText( getApplicationContext(), provider+" Disabled", Toast.LENGTH_SHORT ).show();
 		}
 	
 		@Override
 		public void onProviderEnabled(String provider) {
-			Toast.makeText( getApplicationContext(),"Gps Enabled "+ provider,Toast.LENGTH_SHORT).show();
+			Toast.makeText( getApplicationContext(),provider+" Enabled",Toast.LENGTH_SHORT).show();
 		}
 	
 		@Override
@@ -505,21 +509,47 @@ public class WirelessInfo extends Activity {
 			break;
 		case R.id.sRecord:
 			trace("onOptionsItemSelected: Start recording");
+			
+			intTmpStoreDbA = new IntTmpStoreDBAdapter(this);
+			try {
+				intTmpStoreDbA.open();
+		    	trace("menuStartRecording: Opened DB");
+		    } catch (SQLException e) {
+		    	trace("menuStartRecording: Fail to open db "+e.getMessage());
+		    	intTmpStoreDbA.close();
+		    }
+		    
 			try {
 				verify.wirelessInfoTmpStor();
 				tmpStorage = new TmpStorage(true);
+				
+				cellInfoRecording = true;
+				((TextView) findViewById(R.id.recordStatus)).setText("(R) ");
+				
 			} catch (WirelessInfoException e) {
 				trace("Temp Storage error "+e.getMessage());
 				Toast.makeText( getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT ).show();
 			}
-			cellInfoRecording = true;
-			((TextView) findViewById(R.id.recordStatus)).setText("(R) ");
+			
+			if (mlocManager != null) {
+				mlocManager.requestLocationUpdates( LocationManager.GPS_PROVIDER, 400, 1, mlocListener);
+			}
+			
 			
 			break;
 		case R.id.eRecord:
 			trace("onOptionsItemSelected: Stop recording");
+			if (mlocManager != null && cellInfoRecording) {
+				mlocManager.removeUpdates(mlocListener);
+			}
 			cellInfoRecording = false;
-			tmpStorage.close();
+			if (intTmpStoreDbA != null) {
+				intTmpStoreDbA.close();
+			}
+			if (tmpStorage != null) {
+				tmpStorage.close();
+			}
+			
 			((TextView) findViewById(R.id.recordStatus)).setText("");
 			break;
 		}
@@ -568,7 +598,7 @@ public class WirelessInfo extends Activity {
 		tm.listen(MyListener, listenEvents);
 		//tmpStorage = new TmpStorage(false);
 		//mlocManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-		if (mlocManager != null) {
+		if (mlocManager != null && cellInfoRecording) {
 			mlocManager.requestLocationUpdates( LocationManager.GPS_PROVIDER, 400, 1, mlocListener);
 			//locationManager.requestLocationUpdates(provider, 400, 1, this);
 		} else {
@@ -629,6 +659,7 @@ public class WirelessInfo extends Activity {
 			
 			if (cellInfoRecording) {
 				tmpStorage.insertData(imsi, cellid, ssdbm, lat, lng);
+				intTmpStoreDbA.createCellInfo(imsi, null, Integer.parseInt(cellid), ssdbm, lat, lng);
 			}
 
 			((TextView) findViewById(R.id.other_txt1)).setText(cellid+": "+SignalHeading
