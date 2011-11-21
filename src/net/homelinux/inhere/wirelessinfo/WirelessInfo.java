@@ -305,7 +305,7 @@ public class WirelessInfo extends Activity {
 				}
 				
 				if (cellInfoRecording) {
-					tmpStorage.insertData(imsi, cellid, ssdbm, lat, lng);
+					intTmpStoreDbA.createCellInfo(imsi, null, Integer.parseInt(cellid), ssdbm, lat, lng);
 				}
 				
 				if (upLoadCellInfo == true) {
@@ -517,11 +517,13 @@ public class WirelessInfo extends Activity {
 			try {
 				intTmpStoreDbA.open();
 		    	trace("menuStartRecording: Opened DB");
+		    	cellInfoRecording = true;
+				((TextView) findViewById(R.id.recordStatus)).setText("(R) ");
 		    } catch (SQLException e) {
 		    	trace("menuStartRecording: Fail to open db "+e.getMessage());
 		    	intTmpStoreDbA.close();
 		    }
-		    
+		    /*
 			try {
 				verify.wirelessInfoTmpStor();
 				tmpStorage = new TmpStorage(true);
@@ -533,6 +535,7 @@ public class WirelessInfo extends Activity {
 				trace("Temp Storage error "+e.getMessage());
 				Toast.makeText( getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT ).show();
 			}
+			*/
 			
 			if (mlocManager != null) {
 				mlocManager.requestLocationUpdates( LocationManager.GPS_PROVIDER, 400, 1, mlocListener);
@@ -545,13 +548,61 @@ public class WirelessInfo extends Activity {
 			if (mlocManager != null && cellInfoRecording) {
 				mlocManager.removeUpdates(mlocListener);
 			}
+			boolean prevRecordingStatus = cellInfoRecording;
 			cellInfoRecording = false;
-			if (intTmpStoreDbA != null) {
+			//End recording, copy all records from internal to external
+			if (intTmpStoreDbA != null && prevRecordingStatus) {
+				// Copy all records in internal storage to external storage.
+				//CellStatsObject[] statsObj;
+				Cursor cursor = intTmpStoreDbA.cursorSelectAll();
+				int numRecords = cursor.getCount();
+				int numRecord = 0;
+				if (numRecords > 0) {
+					tmpStorage = new TmpStorage(false);
+		    		//statsObj = new CellStatsObject[numRecords];
+		    		trace("UploadData: Found "+numRecords+" cell stats data");
+		    		if (cursor.moveToFirst()) {			
+		    			trace("UploadData: Adding index = "+numRecord+" for "+cursor.getString(4)+" to object");
+			         do {
+			        	 double lat = cursor.getDouble(4);
+			        	 double lng = cursor.getDouble(5);
+			        	 try {
+							tmpStorage.insertData(cursor.getString(0), cursor.getString(1), cursor.getString(2), cursor.getInt(3), lat, lng);
+						} catch (WirelessInfoException e) {
+							trace("Recording Stop: "+e.getMessage());
+							cursor.moveToLast();
+						}
+			        	 /*
+			        	 statsObj[numRecord] = new CellStatsObject();
+			        	 statsObj[numRecord].imsi =  cursor.getString(0);
+			        	 statsObj[numRecord].timeEnter =  cursor.getString(1);
+			        	 statsObj[numRecord].cellid =  cursor.getString(2);
+			        	 statsObj[numRecord].rssi =  cursor.getString(3);
+			        	 double lat = cursor.getDouble(4);
+			        	 double lng = cursor.getDouble(5);
+			        	 statsObj[numRecord].lat =  String.valueOf(lat);
+			        	 statsObj[numRecord].lng =  String.valueOf(lng);
+			        	 */
+			        	 numRecord = numRecord + 1;
+			         } while (cursor.moveToNext());
+				      }
+				      if (cursor != null && !cursor.isClosed()) {
+				         cursor.close();
+				      }
+				      trace("UploadData: Copied "+numRecord+" records to external storage");
+		    	}
+				
+				//tmpStorage = new TmpStorage(false);
+				//tmpStorage.insertData(activityTypeDisplay, cellid, rssi, lat, lng);
+				intTmpStoreDbA.deleteAll();
 				intTmpStoreDbA.close();
+				tmpStorage.close();
 			}
+			/*
 			if (tmpStorage != null) {
 				tmpStorage.close();
 			}
+			*/
 			
 			((TextView) findViewById(R.id.recordStatus)).setText("");
 			break;
@@ -661,7 +712,7 @@ public class WirelessInfo extends Activity {
 			String cellid = getCellId(cid, networkType);
 			
 			if (cellInfoRecording) {
-				tmpStorage.insertData(imsi, cellid, ssdbm, lat, lng);
+				//tmpStorage.insertData(imsi, null, cellid, ssdbm, lat, lng);
 				intTmpStoreDbA.createCellInfo(imsi, null, Integer.parseInt(cellid), ssdbm, lat, lng);
 			}
 

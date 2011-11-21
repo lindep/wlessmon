@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
+import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
@@ -57,6 +58,7 @@ public class UploadData {
 	    	}
 
 		} catch (WirelessInfoException e) {
+			tmpStorage.close();
 			trace("UploadData: Temp Storage error "+e.getMessage());
 		}
     	tmpStorage.close();
@@ -76,27 +78,37 @@ public class UploadData {
 			String json = gsona.toJson(statsObj);
 			
 			HttpClient client = new DefaultHttpClient();
-			HttpPost post = new HttpPost("http://inhere.homelinux.net/test/uploaddata.php");
 			try {
-				List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(1);
-				nameValuePairs.add(new BasicNameValuePair("json", json));
-				nameValuePairs.add(new BasicNameValuePair("id",	"53024"));
-				post.setEntity(new UrlEncodedFormEntity(nameValuePairs));
-	 
-				HttpResponse response = client.execute(post);
-				/*
-				BufferedReader rd = new BufferedReader(new InputStreamReader(
-						response.getEntity().getContent()));
-				String line = "";
-				while ((line = rd.readLine()) != null) {
-					line = line+" "+line;
-				}
-				*/
-				trace("uploadDriveTestViaWeb: Done");
+				HttpPost post = new HttpPost("http://inhere.homelinux.net/test/uploaddata.php");
+				try {
+					List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(1);
+					nameValuePairs.add(new BasicNameValuePair("json", json));
+					nameValuePairs.add(new BasicNameValuePair("id",	"53024"));
+					post.setEntity(new UrlEncodedFormEntity(nameValuePairs));
+		 
+					HttpResponse response = client.execute(post);
+					StatusLine status = response.getStatusLine();
+				    if (status.getStatusCode() != 200) {
+				    	throw new WirelessInfoException("Invalid response from server: " + status.toString());
+				    }
+					/*
+					BufferedReader rd = new BufferedReader(new InputStreamReader(
+							response.getEntity().getContent()));
+					String line = "";
+					while ((line = rd.readLine()) != null) {
+						line = line+" "+line;
+					}
+					*/
+					trace("uploadDriveTestViaWeb: Done, got return code = "+status.toString());
 
-			} catch (IOException e) {
-				throw new WirelessInfoException(e.getMessage()); 
+				} catch (IOException e) {
+					throw new WirelessInfoException(e.getMessage()); 
+				}
+			} catch (IllegalArgumentException e) {
+				throw new WirelessInfoException("Invalid uri request: "+e.getMessage());
 			}
+			
+			
 
 		/*
 			final AsyncHttpClient client = new AsyncHttpClient();

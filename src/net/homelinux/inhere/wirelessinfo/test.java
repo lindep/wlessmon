@@ -37,6 +37,8 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
+import net.homelinux.inhere.wirelessinfo.database.IntTmpStoreDBAdapter;
+import net.homelinux.inhere.wirelessinfo.database.TmpStorage;
 import net.homelinux.inhere.wirelessinfo.database.WirelessInfoDBAdapter;
 import net.homelinux.inhere.wirelessinfo.database.cellinfoDBAdapter;
 import net.homelinux.inhere.wirelessinfo.verification.WirelessInfoException;
@@ -58,6 +60,7 @@ public class test extends Activity  {
 	
 	private WirelessInfoDBAdapter dbAdapter;
 	private cellinfoDBAdapter cellInfoDbA;
+	private IntTmpStoreDBAdapter intTmpStoreDbA;
 	
 	private Spinner spinServerName;
 	private Cursor cursor;
@@ -352,7 +355,7 @@ public class test extends Activity  {
 	    	info = "Found "+names.size()+" records in Host tabel";
 	    	dbAdapter.close();
 	    } catch (SQLException e) {
-	    	trace("onClickDBTest: Fail to open db "+e.getMessage());
+	    	trace("WirelessInfoDBAdapter: Fail to open db "+e.getMessage());
 	    	dbAdapter.close();
 	    }
 	    
@@ -365,8 +368,21 @@ public class test extends Activity  {
 	    	info = info+", Found "+records+" cell info records";
 	    	cellInfoDbA.close();
 	    } catch (SQLException e) {
-	    	trace("purgeCellInfo: Fail to open db "+e.getMessage());
+	    	trace("cellinfoDBAdapter: Fail to open db "+e.getMessage());
 	    	cellInfoDbA.close();
+	    }
+	    
+	    intTmpStoreDbA = new IntTmpStoreDBAdapter(this);
+	    try {
+	    	intTmpStoreDbA.open();
+			int records = intTmpStoreDbA.getDbInfo();
+	    	trace("onClickDBTest: "+records+" in Internal storage info DB");
+	    	//status("Found "+records+" cell info records");
+	    	info = info+", Found "+records+" Internal storage info records";
+	    	intTmpStoreDbA.close();
+	    } catch (SQLException e) {
+	    	trace("IntTmpStoreDBAdapter: Fail to open db "+e.getMessage());
+	    	intTmpStoreDbA.close();
 	    }
 	    
 	    UploadData up = new UploadData();
@@ -558,7 +574,7 @@ public class test extends Activity  {
 	private boolean loadDriveTest() throws WirelessInfoException {
 		
 		progressDialog = ProgressDialog.show(this, "Please wait....",
-		"Retrieving Cell Info Details");
+		"Uploading drivetest data.");
 		
 		new Thread(new Runnable() {
 			public void run() {
@@ -566,6 +582,9 @@ public class test extends Activity  {
 				UploadData up = new UploadData();
 				try {
 					up.uploadDriveTestViaWeb();
+					//Delete all data from external data.
+					TmpStorage tmpStorage = new TmpStorage(true);
+					tmpStorage.close();
 					progressDialog.dismiss();
 				} catch (WirelessInfoException e) {
 					status("setLoginDetails: Failure. " + e.getMessage());

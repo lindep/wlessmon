@@ -45,13 +45,20 @@ public class IntTmpStoreDBAdapter {
 	}
 	
 	/**
+	 * Deletes all info
+	 */
+	public boolean deleteAll() {
+		return database.delete(DATABASE_TABLE, null, null) > 0;
+	}
+	
+	/**
      * Select All returns a cursor
      * @return the cursor for the DB selection
      */
     public Cursor cursorSelectAll() {
         Cursor cursor = database.query(
         		DATABASE_TABLE, // Table Name
-                new String[] { KEY_ROWID, KEY_IMSI, KEY_TIMEENTER, KEY_CELLID, KEY_RSSI, KEY_LAT, KEY_LNG }, // Columns to return
+                new String[] { KEY_IMSI, KEY_TIMEENTER, KEY_CELLID, KEY_RSSI, KEY_LAT, KEY_LNG }, // Columns to return
                 null,       // SQL WHERE
                 null,       // Selection Args
                 null,       // SQL GROUP BY 
