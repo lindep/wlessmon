@@ -68,17 +68,22 @@ public class TmpStorage {
 	/**
 	* Insert into tmpstorage
 	*/
-	public void insertData(String imsi, String cellid, int rssi, double lat, double lng) {
-		   /* Insert data to a Table*/
-		Calendar c = Calendar.getInstance();
-        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        String formattedDate = df.format(c.getTime());
+	public void insertData(String imsi, String timeEnter, String cellid, int rssi, double lat, double lng) throws WirelessInfoException {
+		String formattedDate;
+		if (timeEnter == null) {
+			Calendar c = Calendar.getInstance();
+			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			formattedDate = df.format(c.getTime());
+		} else {
+			formattedDate = timeEnter;
+		}
         
 		try {
-		   myDB.execSQL("INSERT INTO "+ TABLE_TABLE + " (timeEnter, imsi, cellid, rssi, lat, lng)" + " VALUES ('"+formattedDate+"', '"+imsi+"', "+Integer.parseInt(cellid)+", "+rssi+", "+lat+", "+lng+");");
-		   trace("insertData: INSERT INTO "+ TABLE_TABLE + " (timeEnter, cellid, rssi, lat, lng)" + " VALUES ('"+formattedDate+"','"+imsi+"', "+cellid+", "+rssi+", "+lat+", "+lng+");");
-		} catch (SQLException e) {
+			trace("insertData: INSERT INTO "+ TABLE_TABLE + " (timeEnter, cellid, rssi, lat, lng)" + " VALUES ('"+formattedDate+"','"+imsi+"', "+cellid+", "+rssi+", "+lat+", "+lng+");");
+			myDB.execSQL("INSERT INTO "+ TABLE_TABLE + " (timeEnter, imsi, cellid, rssi, lat, lng)" + " VALUES ('"+formattedDate+"', '"+imsi+"', "+Integer.parseInt(cellid)+", "+rssi+", "+lat+", "+lng+");");
+		   } catch (SQLException e) {
 			trace ("insertData: "+e.getMessage());
+			throw new WirelessInfoException("SQL insert fail: "+e.getMessage());
 		}
 	}
 	
