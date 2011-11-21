@@ -462,7 +462,8 @@ public class WirelessInfo extends Activity {
 			Bundle b = new Bundle();
             b.putString("IDENT", "data_to_subactivity");
             b.putString("IDENT1", "more data_to_subactivity");
-            
+            i.putExtras(b);
+            /*
             if (serverLogin[0] != null) {
             	b.putBoolean("hostStatus",true);
 	            b.putString("host",serverLogin[0].getHost());
@@ -477,12 +478,14 @@ public class WirelessInfo extends Activity {
 	            //p = serverLogin;
 	            i.putExtra("serverLogin", lt);
 	            //i.putExtra("arrayServerlogin", p);
-	            startActivityForResult(i, SET_SETTINGS);
+	            
 	            
             } else {
             	b.putBoolean("hostStatus",false);
             	Toast.makeText(this, "Please set Login Details first!", Toast.LENGTH_SHORT).show();
             }
+            */
+            startActivityForResult(i, SET_SETTINGS);
 	
 			break;
 		case R.id.mclearlogin:
