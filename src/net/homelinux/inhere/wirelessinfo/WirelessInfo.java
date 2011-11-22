@@ -139,7 +139,7 @@ public class WirelessInfo extends Activity {
         criteria.setPowerRequirement(Criteria.POWER_HIGH); //POWER_LOW
         //String provider = locationManager.getBestProvider(criteria, true);
 
-        Gson gson = new Gson();
+        //Gson gson = new Gson();
 		
 		mlocManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 		
@@ -413,6 +413,7 @@ public class WirelessInfo extends Activity {
 				lng = (loc.getLongitude());
 				latituteField.setText(String.valueOf(lat));
 				longitudeField.setText(String.valueOf(lng));
+				cellInfoRecording = true;
 				//loc.getLatitude();
 				//loc.getLongitude();
 				//String Text = "My current location is: Latitud = " + loc.getLatitude() + "Longitud = " + loc.getLongitude();
@@ -517,8 +518,13 @@ public class WirelessInfo extends Activity {
 			try {
 				intTmpStoreDbA.open();
 		    	trace("menuStartRecording: Opened DB");
-		    	cellInfoRecording = true;
+		    	/* Moved recording start to location update event */
+		    	//cellInfoRecording = true;
 				((TextView) findViewById(R.id.recordStatus)).setText("(R) ");
+				//Start GPS
+				if (mlocManager != null) {
+					mlocManager.requestLocationUpdates( LocationManager.GPS_PROVIDER, 400, 1, mlocListener);
+				}
 		    } catch (SQLException e) {
 		    	trace("menuStartRecording: Fail to open db "+e.getMessage());
 		    	intTmpStoreDbA.close();
@@ -537,9 +543,7 @@ public class WirelessInfo extends Activity {
 			}
 			*/
 			
-			if (mlocManager != null) {
-				mlocManager.requestLocationUpdates( LocationManager.GPS_PROVIDER, 400, 1, mlocListener);
-			}
+			
 			
 			
 			break;
@@ -590,13 +594,15 @@ public class WirelessInfo extends Activity {
 				         cursor.close();
 				      }
 				      trace("UploadData: Copied "+numRecord+" records to external storage");
+				      tmpStorage.close();
 		    	}
 				
 				//tmpStorage = new TmpStorage(false);
 				//tmpStorage.insertData(activityTypeDisplay, cellid, rssi, lat, lng);
 				intTmpStoreDbA.deleteAll();
 				intTmpStoreDbA.close();
-				tmpStorage.close();
+				intTmpStoreDbA = null;
+				
 			}
 			/*
 			if (tmpStorage != null) {
@@ -714,6 +720,7 @@ public class WirelessInfo extends Activity {
 			if (cellInfoRecording) {
 				//tmpStorage.insertData(imsi, null, cellid, ssdbm, lat, lng);
 				intTmpStoreDbA.createCellInfo(imsi, null, Integer.parseInt(cellid), ssdbm, lat, lng);
+				((TextView) findViewById(R.id.recordStatus)).setText("(R-"+intTmpStoreDbA.getDbInfo()+")");
 			}
 
 			((TextView) findViewById(R.id.other_txt1)).setText(cellid+": "+SignalHeading
