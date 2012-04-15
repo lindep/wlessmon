@@ -79,7 +79,7 @@ public class UploadData {
 			
 			HttpClient client = new DefaultHttpClient();
 			try {
-				HttpPost post = new HttpPost("http://inhere.homelinux.net/test/uploaddata.php");
+				HttpPost post = new HttpPost("http://inhere.homelinux.net/android/statsuploaddata.php");
 				try {
 					List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(1);
 					nameValuePairs.add(new BasicNameValuePair("json", json));
