@@ -340,7 +340,7 @@ public class WirelessInfo extends Activity {
 					// client.get("http://www.google.com", new
 					// AsyncHttpResponseHandler() {
 					client.get(
-							"http://inhere.homelinux.net/test/xml_post.php?id=3&name=testing&score=555",
+							"http://inhere.homelinux.net/android/xml_post.php?id=3&name=testing&score=555",
 							new AsyncHttpResponseHandler() {
 								@Override
 								public void onSuccess(String response) {
