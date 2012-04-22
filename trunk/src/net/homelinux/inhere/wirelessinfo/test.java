@@ -467,7 +467,7 @@ public class test extends Activity  {
 		byte[] data = null;
 		try {
 			StringBuilder uri = new StringBuilder(
-					"http://inhere.homelinux.net/test/getcellinfo.php");
+					"http://inhere.homelinux.net/android/getcellinfo.php");
 			uri.append("?alt=json&key=53024");
 			HttpGet request = new HttpGet(uri.toString());
 			HttpClient httpClient = new DefaultHttpClient();
