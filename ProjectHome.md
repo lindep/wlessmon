@@ -1,0 +1,1 @@
+Create a system running on a remote device able to report on wireless conditions.
